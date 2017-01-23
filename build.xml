@@ -1,0 +1,83 @@
+<project name="custom_data_source">
+    <description>
+        IBM OPL Custom data source sample with JDBC
+    </description>
+
+	<property environment="env"/>
+    <property name="src" location="src/main/java"/>
+    <property name="build" location="build"/>    
+    <property file="build.properties"/>
+    
+	<condition property="example.home" value="${env.CPLEX_STUDIO_DIR127}/opl">
+		<isset property="env.CPLEX_STUDIO_DIR127"/>
+	</condition>
+	<property name="example.home" value="${opl.home}">
+	</property>
+	
+	<!-- This makes sure that when running `ant run_target -Dexport=result.txt`,
+	the main program is run with -export result.txt, thus writing a result.txt
+	file with the result.
+	-->
+	<condition property="export.option" value="-export ${export}">
+		<isset property="export"/>
+	</condition>
+	<property name="export.option" value=""/>
+	
+	<echo message="Importing ${example.home}/examples/opl_interfaces/java/build_common.xml"/>
+	
+	<import file="${example.home}/examples/opl_interfaces/java/build_common.xml"/>
+	
+	<property name="oplall.jar" value="${example.home}/lib/oplall.jar"/>
+
+    
+    <path id="project.class.path">
+        <pathelement location="build/"/>
+        <pathelement location="${oplall.jar}"/>
+        <pathelement location="${mysql.jdbc.connector.path}"/>
+        <pathelement path="${db2.jdbc.connector.path}"/>
+    </path>
+    
+    <target name="init">
+        <mkdir dir="${build}"/>
+    </target>
+    
+    <target name="compile" depends="init">
+        <javac srcdir="${src}" destdir="${build}">
+            <classpath refid="project.class.path"/>
+        </javac>
+    </target>
+    
+	<target name="run" depends="compile">
+		<echo message="Running command line: ${cmd}"/>
+        <java classname="com.ibm.opl.customdatasource.CustomDataSource">
+            <classpath refid="project.class.path"/>
+			<jvmarg value="-Djava.library.path=${example.home}/bin/${example.platform}"/>
+			<jvmarg line="${example.jvmargs}"/>
+            <arg line="${export.option} ${cmd}"/>
+			<env key="PATH" path="${example.home}/bin/${example.platform}${platform.separator}${env.PATH}"/>
+			<env key="LD_LIBRARY_PATH" path="${example.home}/bin/${example.platform}"/>
+			<env key="LIBPATH" path="${example.home}/bin/${example.platform}"/>
+			<!-- for Windows since ant is case sensitive for environment variable -->
+			<env key="Path" path="${example.home}/bin/${example.platform}${platform.separator}${env.Path}"/>
+            <env key="LD_PRELOAD_32" path="${preload_32}"/>
+            <env key="LD_PRELOAD_64" path="${preload_64}"/>
+        </java>
+	
+	</target>
+	
+    <target name="run_db2" depends="compile">
+		<antcall target="run">
+            <param name="cmd" value="-properties data/db_db2.xml data/oil.mod data/oil.dat"/>
+		</antcall>
+    </target>
+	
+    <target name="run_mysql" depends="compile">
+		<antcall target="run">
+            <param name="cmd" value="-properties data/db_mysql.xml data/oil.mod data/oil.dat"/>
+		</antcall>
+    </target>
+	
+	<target name="clean">
+		<delete dir="${build}"/>
+	</target>
+</project>

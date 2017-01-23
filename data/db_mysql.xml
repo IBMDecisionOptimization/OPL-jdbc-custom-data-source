@@ -1,0 +1,30 @@
+<datasource>
+	<!-- The connection string
+		 The default url connects to mysql on default port, using database
+		'custom_data_source'
+	 -->
+	<url>jdbc:mysql://localhost:3306/custom_data_source?useSSL=false</url>
+	
+	<!-- Your connection credentials -->
+	<user>root</user>
+	<password>mysql</password>
+	
+	<!-- The read queries
+		 The name attribute is used to populate the corresponding Data Element.
+	-->
+	<read>
+		<query name="Gasolines">SELECT name FROM GasData</query>
+		<query name="Oils">	SELECT name FROM OilData</query>
+		<query name="GasData">SELECT * FROM GasData</query>
+		<query name="OilData">SELECT * FROM OilData</query>
+	</read>
+	
+	<!-- The output table mapping.
+		 This mapping define how output data sets are exported to the database.
+	-->
+	<write>
+		<!-- This maps the output dataset "Result" to the "result" table -->
+		<table name="Result" target="result"/>
+	</write>
+</datasource>
+

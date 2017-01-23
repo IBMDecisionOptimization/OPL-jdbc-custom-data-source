@@ -1,0 +1,7 @@
+
+# bin dirs
+bin/
+build/
+
+# This is not distributed, but contain libs for local deps management
+external_libs/
