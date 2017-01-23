@@ -1,0 +1,8 @@
+{
+	"provider": ["IBM"], 
+	"name":  "OPL JDBC Custom data source sample" ,
+	"model": [ "OPL-CPLEX" ],
+	"development": [ "Java" ],
+	"category": [ {"APPLICATION":["Desktop Application"]} ],
+	"abstract": "This sample demonstrates how to use the IBM Decision Optimization Modeling with OPL custom data source API to import data from a JDBC data source into an OPL model."
+}
