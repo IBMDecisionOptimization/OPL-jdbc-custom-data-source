@@ -10,7 +10,18 @@ While this sample uses MySQL as data storage, it can be easily adapted to
 any database that has JDBC drivers.
 This example will work with any 12.x OPL version, even if it is configured to run with 12.7.0 version.
 
-## Prerequisites
+
+## Table of Contents
+   - [Prerequisites](#prerequisites)
+   - [Build and run the sample](#build-and-run-the-sample)
+      - [Build the sample](#build-the-sample)
+      - [Run sample with DB2](#run-sample-with-db2)
+      - [Run sample with MySQL](#run-sample-with-mysql)
+   - [Export plain dat files](#export-plain-dat-files)
+   - [Run with a previous OPL version](#run-with-a-previous-opl-version)
+   - [License](#license)   
+   
+### Prerequisites
 
 1. This sample assumes that IBM ILOG CPLEX Optimization Studio 12.7.0 is
    installed and configured in your environment.
@@ -29,7 +40,8 @@ This example will work with any 12.x OPL version, even if it is configured to ru
    MySQL Comunity Server, but is compatible with minimal changes with other JDBC
    compatible databases.
 
-## Build the sample
+## Build and run the sample
+### Build the sample
 
 Before you build the sample, you must edit `build.properties` for the appropriate path locations:
 
@@ -48,9 +60,9 @@ ant compile
 The example is automatically compiled with the run Ant targets is invoked.
 
 
-## Run sample with DB2
+### Run sample with DB2
 
-### Setup the sample database
+#### Setup the sample database
 
 
 To run the sample with DB2. you need to install DB2. DB2 Express-C is a free
@@ -81,7 +93,7 @@ Your connection string looks like `db2://localhost:<port>/<database_name>`
 where `port` is the DB2 port (default is 50000), `<database_name>` is the name
 of your database (default is `CUSTOMDB`).
 
-### Run the sample
+#### Run the sample
 Compile and run the sample for IBM DB2:
 
 ```
@@ -92,9 +104,9 @@ $ ant run_db2
 * Uses data/oil.dat as a data file
 * Uses data/db_db2.xml to customize the JDBC custom data source.
 
-## Run sample with MySQL
+### Run sample with MySQL
 
-### Setup the sample database
+#### Setup the sample database
 To run the sample with MySQL, you need to install MySQL. MySQL Community Server is a free edition of MySQL.
 
 On Microsoft Windows, you can download and install it from [here](https://dev.mysql.com/downloads/mysql/).
@@ -134,7 +146,7 @@ Edit `data\db_mysql.xml` for your JDBC connection string and credentials.
 Your connection string looks like `jdbc:mysql://localhost:3306/<database_name>?useSSL=false`
 where `<database_name>` is the name of your database (default is `custom_data_source`).
 
-### Run the sample
+#### Run the sample
 
 Compile and run the sample for MySQL:
 
@@ -146,7 +158,7 @@ $ ant run_mysql
 * Uses data/oil.dat as a data file
 * Uses data/db_mysql.xml to customize the JDBC custom data source.
 
-## Reusing the sample with other databases
+### Reusing the sample with other databases
 As the sample is build on JDBC, it's possible to reuse <code>JdbcCustomDataSource</code> with minimal changes:
 
 * Add your JDBC driver in your classpath
@@ -200,10 +212,10 @@ As the sample is build on JDBC, it's possible to reuse <code>JdbcCustomDataSourc
 	}
 	```
 
-## Export .dat files
+## Export plain dat files
 * When running the `ant` command with the DB2/mysql target, simply add `-Dexport=result.dat` on the command line, and it will export all the tuplesets that have been extracted from the database to `result.dat` file.
 
-## Run with an OPL version <= 12.6.x
+## Run with a previous OPL version
 * Edit the build.xml at the root of the directory, and adapt the `example.home` variable to point to your 12.x version.
 * Recompile the project
 
