@@ -45,8 +45,8 @@ This example will work with any 12.x OPL version, even if it is configured to ru
 
 Before you build the sample, you must edit `build.properties` for the appropriate path locations:
 
-* If you want to run the smaple with MySQL, `mysql.jdbc.connector.path` should point to your JDBC driver location.
-* If you want to run the smaple with IBM DB2, `db2.jdbc.connector.path` should point to your JDBC driver location.
+* If you want to run the sample with MySQL, `mysql.jdbc.connector.path` should point to your JDBC driver location.
+* If you want to run the sample with IBM DB2, `db2.jdbc.connector.path` should point to your JDBC driver location.
 * `opl.home` should point to your OPL home, unless you have a `CPLEX_STUDIO_DIR127` set. (this variable should exists if you installed on a Windows machine).
 
 The build file, `build.xml`, imports the build file from the OPL samples,
