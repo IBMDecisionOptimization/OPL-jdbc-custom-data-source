@@ -101,6 +101,7 @@ class JdbcCustomDataSource extends IloCustomOplDataSource {
                     handler.addStringItem(rs.getString(1));
             }
             handler.endSet();
+            handler.endElement();
             rs.close();
             stmt.close();
             conn.close();
@@ -145,6 +146,7 @@ class JdbcCustomDataSource extends IloCustomOplDataSource {
                 handler.endTuple();
             }
             handler.endSet();
+            handler.endElement();
             rs.close();
             stmt.close();
             conn.close();
