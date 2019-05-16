@@ -72,19 +72,19 @@
 	
     <target name="run_db2" depends="compile">
 		<antcall target="run">
-            <param name="cmd" value="-properties data/db_db2.xml data/oil.mod data/oil.dat"/>
+            <param name="cmd" value="-properties data/db_db2.xml examples/oil/oil.mod examples/oil/oil.dat"/>
 		</antcall>
     </target>
 	
     <target name="run_mysql" depends="compile">
 		<antcall target="run">
-            <param name="cmd" value="-properties data/db_mysql.xml data/oil.mod data/oil.dat"/>
+            <param name="cmd" value="-properties data/db_mysql.xml examples/oil/oil.mod examples/oil/oil.dat"/>
 		</antcall>
     </target>
 	
 	<target name="run_mssql" depends="compile">
 		<antcall target="run">
-            <param name="cmd" value="-properties data/db_mssql.xml data/oil.mod data/oil.dat"/>
+            <param name="cmd" value="-properties data/db_mssql.xml examples/oil/oil.mod examples/oil/oil.dat"/>
 		</antcall>
     </target>
 	
