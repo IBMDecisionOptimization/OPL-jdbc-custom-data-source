@@ -17,6 +17,7 @@ This example will work with any 12.x OPL version, even if it is configured to ru
       - [Build the sample](#build-the-sample)
       - [Run sample with DB2](#run-sample-with-db2)
       - [Run sample with MySQL](#run-sample-with-mysql)
+       - [Run sample with MySQL](#run-sample-with-ms-sql-server)
    - [Export plain dat files](#export-plain-dat-files)
    - [Run with a previous OPL version](#run-with-a-previous-opl-version)
    - [License](#license)   
