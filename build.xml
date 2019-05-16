@@ -8,8 +8,8 @@
     <property name="build" location="build"/>    
     <property file="build.properties"/>
     
-	<condition property="example.home" value="${env.CPLEX_STUDIO_DIR127}/opl">
-		<isset property="env.CPLEX_STUDIO_DIR127"/>
+	<condition property="example.home" value="${env.CPLEX_STUDIO_DIR128}/opl">
+		<isset property="env.CPLEX_STUDIO_DIR128"/>
 	</condition>
 	<property name="example.home" value="${opl.home}">
 	</property>
@@ -35,6 +35,7 @@
         <pathelement location="${oplall.jar}"/>
         <pathelement location="${mysql.jdbc.connector.path}"/>
         <pathelement path="${db2.jdbc.connector.path}"/>
+        <pathelement location="${sqlserver.jdbc.connector.path}"/>
     </path>
     
     <target name="init">
@@ -46,6 +47,10 @@
             <classpath refid="project.class.path"/>
         </javac>
     </target>
+	
+	<target name="jar" depends="compile">
+		<jar destfile="lib/jdbc-custom-data-source.jar" basedir="${build}"/>
+	</target>
     
 	<target name="run" depends="compile">
 		<echo message="Running command line: ${cmd}"/>
@@ -74,6 +79,12 @@
     <target name="run_mysql" depends="compile">
 		<antcall target="run">
             <param name="cmd" value="-properties data/db_mysql.xml data/oil.mod data/oil.dat"/>
+		</antcall>
+    </target>
+	
+	<target name="run_mssql" depends="compile">
+		<antcall target="run">
+            <param name="cmd" value="-properties data/db_mssql.xml data/oil.mod data/oil.dat"/>
 		</antcall>
     </target>
 	
