@@ -42,6 +42,9 @@ This example will work with any 12.x OPL version, even if it is configured to ru
    compatible databases.
 
 ## Build and run the sample
+
+The default sample uses model and data from [examples/oil](examples/oil)
+
 ### Build the sample
 
 Before you build the sample, you must edit `build.properties` for the appropriate path locations:
