@@ -2,7 +2,7 @@
 
 This sample is basically the same as [oil](../oil).
 
-The difference is that it does not involve firing a JVM to run, and can be used
+The difference is that it does not involve writing code in Java, and can be used
 in a .dat/.mod from OPL Studio.
 
 # Setup
