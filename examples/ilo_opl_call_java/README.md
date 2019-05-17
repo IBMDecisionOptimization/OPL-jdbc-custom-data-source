@@ -23,6 +23,13 @@ And you want to specify the configuration file for your database connection:
   var jdbcConfigXml = "../../data/db_mssql.xml";
 ```
 
+Lastly, you want to point to the jdbc custom data source jar.
+It is distributed as binaries in the [lib](../../lib) directory:
+
+```
+  // The jar containing the jdbc custom data source
+  IloOplImportJava("../../lib/jdbc-custom-data-source.jar");
+```
 # Running the sample
 
 To run the sample, invoke the `run.bat` script:
