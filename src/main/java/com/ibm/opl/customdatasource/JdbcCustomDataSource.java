@@ -113,7 +113,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
                 if (leaf == Type.INTEGER)
                     handler.addIntItem(rs.getInt(1));
                 else if (leaf == Type.FLOAT)
-                    handler.addNumItem(rs.getFloat(1));
+                    handler.addNumItem(rs.getDouble(1));
                 else if (leaf == Type.STRING)
                     handler.addStringItem(rs.getString(1));
             }
@@ -155,7 +155,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
                     if (oplFieldsType[column] == Type.INTEGER) {
                         handler.addIntItem(rs.getInt(columnName));
                     } else if (oplFieldsType[column] == Type.FLOAT) {
-                        handler.addNumItem(rs.getFloat(columnName));
+                        handler.addNumItem(rs.getDouble(columnName));
                     } else if (oplFieldsType[column] == Type.STRING) {
                         handler.addStringItem(rs.getString(columnName));
                     }

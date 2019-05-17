@@ -58,7 +58,7 @@ public class JdbcWriter {
             if (type == Type.INTEGER)
                 query += "INT";
             else if (type == Type.FLOAT)
-                query += "DECIMAL(6,2)";
+                query += "FLOAT";
             else if (type == Type.STRING)
                 query += "VARCHAR(30)";
             if (i < (schema.getSize() - 1))
