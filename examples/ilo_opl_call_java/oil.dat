@@ -1,0 +1,17 @@
+prepare {
+  // Update this to point to your jdbc driver.
+  // For instance mssql-jdbc-7.2.2.jre8.jar for mssql
+  IloOplImportJava("../../external_libs/mssql-jdbc-7.2.2.jre8.jar")
+
+  // This is the configuration file for accessing your database.
+  var jdbcConfigXml = "../../data/db_mssql.xml";
+
+  // The jar containing the jdbc custom data source
+  IloOplImportJava("../../lib/jdbc-custom-data-source.jar");
+  
+  IloOplCallJava("com.ibm.opl.customdatasource.JdbcCustomDataSource",
+                 "addDataSource", "", jdbcConfigXml, thisOplModel);
+}
+
+MaxProduction = 14000;
+ProdCost = 4;

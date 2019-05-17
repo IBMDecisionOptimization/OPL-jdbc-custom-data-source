@@ -6,10 +6,12 @@ import ilog.opl.IloOplElement;
 import ilog.opl.IloOplElementDefinition;
 import ilog.opl.IloOplElementDefinitionType.Type;
 import ilog.opl.IloOplFactory;
+import ilog.opl.IloOplModel;
 import ilog.opl.IloOplModelDefinition;
 import ilog.opl.IloOplTupleSchemaDefinition;
 import ilog.opl_core.cppimpl.IloTupleSchema;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -22,9 +24,24 @@ import java.util.Properties;
  * An custom data source reading data using JDBC.
  *
  */
-class JdbcCustomDataSource extends IloCustomOplDataSource {
+public class JdbcCustomDataSource extends IloCustomOplDataSource {
     private JdbcConfiguration _configuration;
     private IloOplModelDefinition _def;
+    
+    /**
+     * Adds a custom data source to a model.
+     *
+     * @param configXml The xml configuration for the data source
+     * @param model The OPL Model
+     */
+    public static void addDataSource(String configXml, IloOplModel model) throws IOException {
+        JdbcConfiguration config = new JdbcConfiguration();
+        config.read(configXml);
+        IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
+        IloOplModelDefinition definition = model.getModelDefinition();
+        JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
+        model.addDataSource(source);
+    }
 
     /**
      * Creates a new JDBC custom data source, based on the specified configuration.
@@ -96,7 +113,7 @@ class JdbcCustomDataSource extends IloCustomOplDataSource {
                 if (leaf == Type.INTEGER)
                     handler.addIntItem(rs.getInt(1));
                 else if (leaf == Type.FLOAT)
-                    handler.addNumItem(rs.getFloat(1));
+                    handler.addNumItem(rs.getDouble(1));
                 else if (leaf == Type.STRING)
                     handler.addStringItem(rs.getString(1));
             }
@@ -138,7 +155,7 @@ class JdbcCustomDataSource extends IloCustomOplDataSource {
                     if (oplFieldsType[column] == Type.INTEGER) {
                         handler.addIntItem(rs.getInt(columnName));
                     } else if (oplFieldsType[column] == Type.FLOAT) {
-                        handler.addNumItem(rs.getFloat(columnName));
+                        handler.addNumItem(rs.getDouble(columnName));
                     } else if (oplFieldsType[column] == Type.STRING) {
                         handler.addStringItem(rs.getString(columnName));
                     }

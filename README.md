@@ -6,18 +6,21 @@ OPL custom data source API to import data from a JDBC data source into an OPL mo
 This sample illustrates the [Subclassing IloCustomOplDataSoource](https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.8.0/ilog.odms.ide.help/OPL_Studio/opllanguser/topics/opl_languser_extfunc_datasubcl.html) section from the OPL User's manual.
 This sample shows how to read and write tuplesets to/from a database with Java. It also enables you to read a database and generate .dat files to be used in the IDE to prototype your optimization model.
 
-While this sample uses MySQL as data storage, it can be easily adapted to
-any database that has JDBC drivers.
+One [variation](examples/ilo_opl_call_java) of this sample shows how to read and write tuplesets to/from a database involving only some scripting in your .dat
+
+This sample comes with example connection configurations to DB2, MySQL and MS SQL Server. It can
+be easily adapted to any database that has JDBC drivers.
 This example will work with any 12.x OPL version, even if it is configured to run with 12.8.0 version.
 
 
 ## Table of Contents
    - [Prerequisites](#prerequisites)
-   - [Build and run the sample](#build-and-run-the-sample)
+   - [Build and run the sample from java](#build-and-run-the-sample-from-java)
       - [Build the sample](#build-the-sample)
       - [Run sample with DB2](#run-sample-with-db2)
       - [Run sample with MySQL](#run-sample-with-mysql)
-       - [Run sample with MS SQL Server](#run-sample-with-ms-sql-server)
+      - [Run sample with MS SQL Server](#run-sample-with-ms-sql-server)
+   - [Run the sample from OPL](#run-the-sample-from-opl)
    - [Export plain dat files](#export-plain-dat-files)
    - [Run with a previous OPL version](#run-with-a-previous-opl-version)
    - [License](#license)   
@@ -41,7 +44,10 @@ This example will work with any 12.x OPL version, even if it is configured to ru
    MySQL Comunity Server, but is compatible with minimal changes with other JDBC
    compatible databases.
 
-## Build and run the sample
+## Build and run the sample from java
+
+The default sample uses model and data from [examples/oil](examples/oil)
+
 ### Build the sample
 
 Before you build the sample, you must edit `build.properties` for the appropriate path locations:
@@ -201,6 +207,14 @@ $ ant run_mssql
 * Uses data/oil.dat as a data file
 * Uses data/db_db2.xml to customize the JDBC custom data source.
 
+
+
+### Run the sample from OPL
+
+Sample in [examples/ilo_opl_call_java](examples/ilo_opl_call_java) shows how to
+use the jdbc custom data source as a library, without having the need to
+invoke OPL runtime from java. You can use this method to access database
+using a jdbc-custom-data-source from `oplrun` or OPL Studio.
 
 
 ### Reusing the sample with other databases
