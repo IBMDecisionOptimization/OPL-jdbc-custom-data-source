@@ -10,7 +10,7 @@ prepare {
   IloOplImportJava("../../lib/jdbc-custom-data-source.jar");
   
   IloOplCallJava("com.ibm.opl.customdatasource.JdbcCustomDataSource",
-                 "addDataSourceXML", "", jdbcConfigXml, thisOplModel);
+                 "addDataSourceXMLConfig", "", jdbcConfigXml, thisOplModel);
 }
 
 MaxProduction = 14000;
