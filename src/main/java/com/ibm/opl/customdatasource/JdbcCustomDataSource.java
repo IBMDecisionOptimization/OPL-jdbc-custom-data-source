@@ -34,7 +34,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
      * @param configXml The xml configuration for the data source
      * @param model The OPL Model
      */
-    public static void addDataSource(String configXml, IloOplModel model) throws IOException {
+    public static void addDataSourceXML(String configXml, IloOplModel model) throws IOException {
         JdbcConfiguration config = new JdbcConfiguration();
         config.read(configXml);
         IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
@@ -43,6 +43,19 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         model.addDataSource(source);
     }
 
+    /**
+     * Adds a custom data source to a model.
+     *
+     * @param config The JDBC configuration object
+     * @param model The OPL Model
+     */
+    public static void addDataSource(JdbcConfiguration config, IloOplModel model) {
+        IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
+        IloOplModelDefinition definition = model.getModelDefinition();
+        JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
+        model.addDataSource(source);
+    }
+    
     /**
      * Creates a new JDBC custom data source, based on the specified configuration.
      * 
