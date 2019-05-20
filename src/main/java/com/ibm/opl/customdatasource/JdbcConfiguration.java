@@ -40,7 +40,11 @@ public class JdbcConfiguration {
     public String getUrl() {
         return _url;
     }
-
+    
+    public void setUrl(String url) {
+      _url = url;
+    }
+    
     public String getUser() {
         return _user;
     }
@@ -52,9 +56,29 @@ public class JdbcConfiguration {
     public Properties getReadQueries() {
         return _readProperties;
     }
+    
+    /**
+     * Adds a read query to the datasource.
+     * 
+     * The specified query is used to populate the OPL data which name is specified.
+     * @param name The OPL data
+     * @param query The read query
+     */
+    public void addReadQuery(String name, String query) {
+      _readProperties.setProperty(name, query);
+    }
 
     public Properties getWriteMapping() {
         return _writeProperties;
+    }
+    
+    /**
+     * Adds a write mapping to the datasource.
+     * @param name The OPL output name.
+     * @param target The database table to map the output to.
+     */
+    public void addWriteMapping(String name, String target) {
+      _writeProperties.setProperty(name, target);
     }
     
     /**
