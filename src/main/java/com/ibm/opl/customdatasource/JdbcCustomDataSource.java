@@ -84,6 +84,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
      * is generated.
      */
     public void customRead() {
+        long startTime = System.currentTimeMillis();
         System.out.println("Reading elements from database");
         Properties prop = _configuration.getReadQueries();
         Enumeration<?> propertyNames = prop.propertyNames();
@@ -93,7 +94,8 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
             System.out.println("Reading " + name + " using \"" + query + "\"");
             customRead(name, query);
         }
-        System.out.println("Done");
+        long endTime = System.currentTimeMillis();
+        System.out.println("Done (" + (endTime - startTime)/1000.0 + " s)");
     }
 
     public void customRead(String name, String query) {
