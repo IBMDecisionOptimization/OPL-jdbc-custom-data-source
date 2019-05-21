@@ -42,7 +42,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
         model.addDataSource(source);
     }
-
+    
     /**
      * Adds a custom data source to a model.
      *
