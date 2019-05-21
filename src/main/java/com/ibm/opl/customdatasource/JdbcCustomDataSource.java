@@ -31,18 +31,31 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
     /**
      * Adds a custom data source to a model.
      *
-     * @param configXml The xml configuration for the data source
+     * @param xmlFile The xml configuration for the data source
      * @param model The OPL Model
      */
-    public static void addDataSource(String configXml, IloOplModel model) throws IOException {
+    public static void addDataSourceXMLConfig(String xmlFile, IloOplModel model) throws IOException {
         JdbcConfiguration config = new JdbcConfiguration();
-        config.read(configXml);
+        config.read(xmlFile);
         IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
         IloOplModelDefinition definition = model.getModelDefinition();
         JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
         model.addDataSource(source);
     }
-
+    
+    /**
+     * Adds a custom data source to a model.
+     *
+     * @param config The JDBC configuration object
+     * @param model The OPL Model
+     */
+    public static void addDataSource(JdbcConfiguration config, IloOplModel model) {
+        IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
+        IloOplModelDefinition definition = model.getModelDefinition();
+        JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
+        model.addDataSource(source);
+    }
+    
     /**
      * Creates a new JDBC custom data source, based on the specified configuration.
      * 
@@ -71,6 +84,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
      * is generated.
      */
     public void customRead() {
+        long startTime = System.currentTimeMillis();
         System.out.println("Reading elements from database");
         Properties prop = _configuration.getReadQueries();
         Enumeration<?> propertyNames = prop.propertyNames();
@@ -80,7 +94,8 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
             System.out.println("Reading " + name + " using \"" + query + "\"");
             customRead(name, query);
         }
-        System.out.println("Done");
+        long endTime = System.currentTimeMillis();
+        System.out.println("Done (" + (endTime - startTime)/1000.0 + " s)");
     }
 
     public void customRead(String name, String query) {
