@@ -3,6 +3,7 @@ package com.ibm.opl.customdatasource;
 import ilog.concert.IloTuple;
 import ilog.opl.IloOplElement;
 import ilog.opl.IloOplElementDefinition;
+import ilog.opl.IloOplFactory;
 import ilog.opl.IloOplElementDefinitionType.Type;
 import ilog.opl.IloOplModel;
 import ilog.opl.IloOplModelDefinition;
@@ -24,6 +25,13 @@ public class JdbcWriter {
     private JdbcConfiguration _configuration;
     private IloOplModelDefinition _def;
     private IloOplModel _model;
+    
+    public static void writeOutput(JdbcConfiguration config, IloOplModel model) {
+      IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
+      IloOplModelDefinition definition = model.getModelDefinition();
+      JdbcWriter writer = new JdbcWriter(config, definition, model);
+      writer.customWrite();
+  }
 
     public JdbcWriter(JdbcConfiguration configuration, IloOplModelDefinition def, IloOplModel model) {
         _configuration = configuration;
