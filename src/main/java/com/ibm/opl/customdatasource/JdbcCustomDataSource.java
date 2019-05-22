@@ -1,6 +1,7 @@
 package com.ibm.opl.customdatasource;
 
 import ilog.opl.IloCustomOplDataSource;
+import ilog.opl.IloCustomOplPostProcessListener;
 import ilog.opl.IloOplDataHandler;
 import ilog.opl.IloOplElement;
 import ilog.opl.IloOplElementDefinition;
@@ -20,6 +21,8 @@ import java.sql.Statement;
 import java.util.Enumeration;
 import java.util.Properties;
 
+
+
 /**
  * An custom data source reading data using JDBC.
  *
@@ -27,6 +30,30 @@ import java.util.Properties;
 public class JdbcCustomDataSource extends IloCustomOplDataSource {
     private JdbcConfiguration _configuration;
     private IloOplModelDefinition _def;
+    
+    /**
+     * A post process listener to write output
+     */
+    private static class JdbcCustomDataSourcePublisher extends IloCustomOplPostProcessListener {
+      IloOplModel _model;
+      JdbcConfiguration _config;
+      
+      
+      JdbcCustomDataSourcePublisher(IloOplFactory factory, IloOplModel model, JdbcConfiguration config) {
+        super(factory);
+        _model = model;
+        _config = config;
+      }
+
+      @Override
+      public void customStartPostProcess() {
+      }
+      
+      @Override
+      public void customEndPostProcess() {
+        JdbcWriter.writeOutput(_config, _model);
+      }
+    }
     
     /**
      * Adds a custom data source to a model.
@@ -41,6 +68,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         IloOplModelDefinition definition = model.getModelDefinition();
         JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
         model.addDataSource(source);
+        model.registerPostProcessListener(new JdbcCustomDataSourcePublisher(factory, model, config));
     }
     
     /**
@@ -54,6 +82,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         IloOplModelDefinition definition = model.getModelDefinition();
         JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
         model.addDataSource(source);
+        model.registerPostProcessListener(new JdbcCustomDataSourcePublisher(factory, model, config));
     }
     
     /**
