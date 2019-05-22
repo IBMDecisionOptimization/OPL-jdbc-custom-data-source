@@ -12,6 +12,7 @@ import ilog.opl_core.cppimpl.IloTupleSchema;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Enumeration;
@@ -79,37 +80,38 @@ public class JdbcWriter {
 
     static final String INSERT_QUERY = "INSERT INTO %(";
 
-    String insertQuery(IloTupleSchema schema, String table) {
-        String query = INSERT_QUERY.replace("%", table);
-        for (int i = 0; i < schema.getSize(); i++) {
-            String columnName = schema.getColumnName(i);
-            query += columnName;
-            if (i < (schema.getSize() - 1))
-                query += ", ";
-        }
-        query += ") VALUES(%)";
-        return query;
+    String getPlaceholderString(int size) {
+      StringBuffer b = new StringBuffer();
+      for (int i=0; i < size-1; i++)
+        b.append("?,");
+      b.append("?");
+      return b.toString();
     }
-
-    // create the inserting value
-    String insertValueString(IloTuple tuple, IloTupleSchema schema) {
-        IloOplElementDefinition tupleDef = _def.getElementDefinition(schema.getName());
-        IloOplTupleSchemaDefinition tupleSchemaDef = tupleDef.asTupleSchema();
-        String values = "";
-        for (int i = 0; i < schema.getSize(); i++) {
-            String value = "";
-            Type columnType = tupleSchemaDef.getComponent(i).getElementDefinitionType();
-            if (columnType == Type.INTEGER)
-                value = Integer.toString(tuple.getIntValue(i));
-            else if (columnType == Type.FLOAT)
-                value = Double.toString(tuple.getNumValue(i));
-            else if (columnType == Type.STRING)
-                value = "'" + tuple.getStringValue(i) + "'";
-            values += value;
-            if (i < (schema.getSize() - 1))
-                values += ", ";
-        }
-        return values;
+    
+    String getInsertQuery(IloTupleSchema schema, String table) {
+      String query = INSERT_QUERY.replace("%", table);
+      for (int i = 0; i < schema.getSize(); i++) {
+          String columnName = schema.getColumnName(i);
+          query += columnName;
+          if (i < (schema.getSize() - 1))
+              query += ", ";
+      }
+      query += ") VALUES(" + getPlaceholderString(schema.getSize()) + ")";
+      return query;
+    }
+    
+    void updateValues(IloTuple tuple, IloTupleSchema schema, 
+                      IloOplTupleSchemaDefinition tupleSchemaDef, PreparedStatement stmt) throws SQLException {
+      for (int i = 0; i < schema.getSize(); i++) {
+          int index = i+1;  // index in PreparedStatement
+          Type columnType = tupleSchemaDef.getComponent(i).getElementDefinitionType();
+          if (columnType == Type.INTEGER)
+              stmt.setInt(index, tuple.getIntValue(i));
+          else if (columnType == Type.FLOAT)
+              stmt.setDouble(index, tuple.getNumValue(i));
+          else if (columnType == Type.STRING)
+              stmt.setString(index, tuple.getStringValue(i));
+      }
     }
 
     static final String DROP_QUERY = "DROP TABLE %";
@@ -122,9 +124,9 @@ public class JdbcWriter {
         IloOplElement elt = _model.getElement(name);
         ilog.opl_core.cppimpl.IloTupleSet tupleSet = (ilog.opl_core.cppimpl.IloTupleSet) elt.asTupleSet();
         IloTupleSchema schema = tupleSet.getSchema_cpp();
-
+        Connection conn = null;
         try {
-            Connection conn = DriverManager.getConnection(_configuration.getUrl(), _configuration.getUser(),
+            conn = DriverManager.getConnection(_configuration.getUrl(), _configuration.getUser(),
                     _configuration.getPassword());
             Statement stmt = conn.createStatement();
             String sql;
@@ -141,18 +143,34 @@ public class JdbcWriter {
             sql = createTableQuery(schema, table);
             // System.out.println(sql);
             stmt.executeUpdate(sql);
-            // then insert values
-            sql = insertQuery(schema, table);
-            // iterate the set and create the final insert statement
-            for (java.util.Iterator it1 = tupleSet.iterator(); it1.hasNext();) {
-                IloTuple tuple = (IloTuple) it1.next();
-                String finalsql = sql.replaceFirst("%", insertValueString(tuple, schema));
-                // System.out.println(finalsql);
-                stmt.executeUpdate(finalsql);
+            
+            try {
+              IloOplElementDefinition tupleDef = _def.getElementDefinition(schema.getName());
+              IloOplTupleSchemaDefinition tupleSchemaDef = tupleDef.asTupleSchema();
+              
+              conn.setAutoCommit(false); // begin transaction
+              String psql = getInsertQuery(schema, table);
+              PreparedStatement pstmt = conn.prepareStatement(psql);
+              // iterate the set and create the final insert statement
+              for (java.util.Iterator it1 = tupleSet.iterator(); it1.hasNext();) {
+                  IloTuple tuple = (IloTuple) it1.next();
+                  updateValues(tuple, schema, tupleSchemaDef, pstmt);
+                  pstmt.executeUpdate();
+              }
+              conn.commit();
+            } catch (SQLException e) {
+              conn.rollback();
             }
+
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
+        } finally {
+          if (conn != null)
+            try {
+              conn.close();
+            } catch (SQLException e) {
+              e.printStackTrace();
+            }
         }
     }
 }
