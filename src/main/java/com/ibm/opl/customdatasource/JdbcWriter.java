@@ -41,6 +41,7 @@ public class JdbcWriter {
     }
 
     public void customWrite() {
+        long startTime = System.currentTimeMillis();
         System.out.println("Writing elements to database");
         Properties prop = _configuration.getWriteMapping();
         Enumeration<?> propertyNames = prop.propertyNames();
@@ -50,7 +51,8 @@ public class JdbcWriter {
             System.out.println("Writing " + name + " using table " + table + "");
             customWrite(name, table);
         }
-        System.out.println("Done");
+        long endTime = System.currentTimeMillis();
+        System.out.println("Done (" + (endTime - startTime)/1000.0 + " s)");
     }
 
     static final String CREATE_QUERY = "CREATE TABLE %(";
@@ -74,7 +76,7 @@ public class JdbcWriter {
                 query += ", ";
         }
         query += ")";
-        System.out.println("Create query = " + query);
+        // System.out.println("Create query = " + query);
         return query;
     }
 

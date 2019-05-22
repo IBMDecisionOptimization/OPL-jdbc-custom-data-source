@@ -29,6 +29,7 @@
 	
 	<property name="oplall.jar" value="${example.home}/lib/oplall.jar"/>
 
+	<property name="debug" value="off"/>
     
     <path id="project.class.path">
         <pathelement location="build/"/>
@@ -43,7 +44,7 @@
     </target>
     
     <target name="compile" depends="init">
-        <javac srcdir="${src}" destdir="${build}">
+        <javac srcdir="${src}" destdir="${build}" debug="${debug}">
             <classpath refid="project.class.path"/>
         </javac>
     </target>
