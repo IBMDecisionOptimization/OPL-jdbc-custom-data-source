@@ -3,7 +3,6 @@ package com.ibm.opl.customdatasource;
 import ilog.concert.IloTuple;
 import ilog.opl.IloOplElement;
 import ilog.opl.IloOplElementDefinition;
-import ilog.opl.IloOplFactory;
 import ilog.opl.IloOplElementDefinitionType.Type;
 import ilog.opl.IloOplModel;
 import ilog.opl.IloOplModelDefinition;
@@ -11,8 +10,10 @@ import ilog.opl.IloOplTupleSchemaDefinition;
 import ilog.opl_core.cppimpl.IloTupleSchema;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Enumeration;
@@ -27,8 +28,13 @@ public class JdbcWriter {
     private IloOplModelDefinition _def;
     private IloOplModel _model;
     
+    /**
+     * Convenience method to write the output of a model to a database.
+     * 
+     * @param config The database connection configuration.
+     * @param model The OPL model.
+     */
     public static void writeOutput(JdbcConfiguration config, IloOplModel model) {
-      IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
       IloOplModelDefinition definition = model.getModelDefinition();
       JdbcWriter writer = new JdbcWriter(config, definition, model);
       writer.customWrite();
@@ -118,11 +124,13 @@ public class JdbcWriter {
 
     static final String DROP_QUERY = "DROP TABLE %";
 
+    /**
+     * Writes a model element to database.
+     * 
+     * @param name The model element name.
+     * @param table The database table.
+     */
     void customWrite(String name, String table) {
-        IloOplElementDefinition def = _def.getElementDefinition(name);
-        Type type = def.getElementDefinitionType();
-        Type leaf = def.getLeaf().getElementDefinitionType();
-
         IloOplElement elt = _model.getElement(name);
         ilog.opl_core.cppimpl.IloTupleSet tupleSet = (ilog.opl_core.cppimpl.IloTupleSet) elt.asTupleSet();
         IloTupleSchema schema = tupleSet.getSchema_cpp();
@@ -130,40 +138,56 @@ public class JdbcWriter {
         try {
             conn = DriverManager.getConnection(_configuration.getUrl(), _configuration.getUser(),
                     _configuration.getPassword());
-            Statement stmt = conn.createStatement();
-            String sql;
-            // drop existing table
+            Statement stmt = null;
             try {
-                sql = DROP_QUERY.replaceFirst("%", table);
-                // System.out.println(sql);
-                stmt.executeUpdate(sql);
-            } catch (SQLException e) {
-                // table does not exists,
+              
+              stmt = conn.createStatement();
+              String sql;
+              // drop existing table if exists
+              DatabaseMetaData dbm = conn.getMetaData();
+              ResultSet rs = null;
+              try {
+                rs = dbm.getTables(null, null, table, null);
+                boolean exists = rs.next();
+                rs.close(); rs = null;
+                if (exists) {
+                  sql = DROP_QUERY.replaceFirst("%", table);
+                  stmt.executeUpdate(sql);
+                }
+              } finally {
+                if (rs != null)
+                  rs.close();
+              }
+              
+              // create table using tuple fields
+              // first create query
+              sql = createTableQuery(schema, table);
+              stmt.executeUpdate(sql);
+            } finally {
+              if (stmt != null)
+                stmt.close();
             }
-            // create table using tuple fields
-            // first create query
-            sql = createTableQuery(schema, table);
-            // System.out.println(sql);
-            stmt.executeUpdate(sql);
-            
+            PreparedStatement insert = null;
             try {
               IloOplElementDefinition tupleDef = _def.getElementDefinition(schema.getName());
               IloOplTupleSchemaDefinition tupleSchemaDef = tupleDef.asTupleSchema();
               
               conn.setAutoCommit(false); // begin transaction
               String psql = getInsertQuery(schema, table);
-              PreparedStatement pstmt = conn.prepareStatement(psql);
+              insert = conn.prepareStatement(psql);
               // iterate the set and create the final insert statement
               for (java.util.Iterator it1 = tupleSet.iterator(); it1.hasNext();) {
                   IloTuple tuple = (IloTuple) it1.next();
-                  updateValues(tuple, schema, tupleSchemaDef, pstmt);
-                  pstmt.executeUpdate();
+                  updateValues(tuple, schema, tupleSchemaDef, insert);
+                  insert.executeUpdate();
               }
               conn.commit();
             } catch (SQLException e) {
               conn.rollback();
+            } finally {
+              if (insert != null)
+                insert.close();
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {

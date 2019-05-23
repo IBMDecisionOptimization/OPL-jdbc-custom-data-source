@@ -64,11 +64,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
     public static void addDataSourceXMLConfig(String xmlFile, IloOplModel model) throws IOException {
         JdbcConfiguration config = new JdbcConfiguration();
         config.read(xmlFile);
-        IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
-        IloOplModelDefinition definition = model.getModelDefinition();
-        JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
-        model.addDataSource(source);
-        model.registerPostProcessListener(new JdbcCustomDataSourcePublisher(factory, model, config));
+        addDataSource(config, model);
     }
     
     /**
@@ -244,6 +240,15 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         }
     }
 
+    /**
+     * Read the set for <code>name</code> from <code>query</code>.
+     * <b>Note:</b> the function will just use the first value produced by each row of
+     *              <code>query</code> and add that to the set.
+     * @param leaf The type of set elements.
+     * @param name The name of the element to fill.
+     * @param query The SQL query that produces the data for <code>name</code>.
+     * @throws SQLException if querying the database fails.
+     */
     public void readSet(Type leaf, String name, String query) throws SQLException {
         IloOplDataHandler handler = getDataHandler();
         final RunQuery q = new RunQuery(query);
@@ -268,6 +273,13 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         }
     }
 
+    /**
+     * Read the tuple set for <code>name</code> from <code>query</code>.
+     *
+     * @param name The name of the element to fill.
+     * @param query The SQL query that produces the data for <code>name</code>.
+     * @throws SQLException if querying the database fails.
+     */
     public void readTupleSet(String name, String query) throws SQLException {
         IloOplDataHandler handler = getDataHandler();
         IloOplElement elt = handler.getElement(name);
