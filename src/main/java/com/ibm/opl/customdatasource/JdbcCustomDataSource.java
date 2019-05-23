@@ -112,22 +112,33 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
      * Overrides the IloCustomOplDataSource method to read data when the model
      * is generated.
      */
+    @Override
     public void customRead() {
         long startTime = System.currentTimeMillis();
-        System.out.println("Reading elements from database");
-        Properties prop = _configuration.getReadQueries();
-        Enumeration<?> propertyNames = prop.propertyNames();
-        while (propertyNames.hasMoreElements()) {
-            String name = (String) propertyNames.nextElement();
-            String query = prop.getProperty(name);
-            System.out.println("Reading " + name + " using \"" + query + "\"");
-            customRead(name, query);
+        try {
+            System.out.println("Reading elements from database");
+            Properties prop = _configuration.getReadQueries();
+            Enumeration<?> propertyNames = prop.propertyNames();
+            while (propertyNames.hasMoreElements()) {
+               String name = (String) propertyNames.nextElement();
+               String query = prop.getProperty(name);
+               System.out.println("Reading " + name + " using \"" + query + "\"");
+               customRead(name, query);
+            }
+            long endTime = System.currentTimeMillis();
+            System.out.println("Done (" + (endTime - startTime)/1000.0 + " s)");
         }
-        long endTime = System.currentTimeMillis();
-        System.out.println("Done (" + (endTime - startTime)/1000.0 + " s)");
+        catch (SQLException e) {
+            // Since the superclass's method signature does not allow us to
+            // throw an exception from here, we have to wrap the exception.
+            long endTime = System.currentTimeMillis();
+            System.err.println(e.getMessage() + " (after " + (endTime - startTime)/1000.0 + " s)");
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
-    public void customRead(String name, String query) {
+    public void customRead(String name, String query) throws SQLException {
         IloOplElementDefinition def = _def.getElementDefinition(name);
         Type type = def.getElementDefinitionType();
         Type leaf = def.getLeaf().getElementDefinitionType();
