@@ -244,15 +244,11 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         }
     }
 
-    public void readSet(Type leaf, String name, String query) {
+    public void readSet(Type leaf, String name, String query) throws SQLException {
         IloOplDataHandler handler = getDataHandler();
+        final RunQuery q = new RunQuery(query);
         try {
-            Connection conn = DriverManager.getConnection(_configuration.getUrl(),
-                    _configuration.getUser(),
-                    _configuration.getPassword());
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
-
+            ResultSet rs = q.getResult();
             handler.startElement(name);
             handler.startSet();
 
@@ -266,32 +262,27 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
             }
             handler.endSet();
             handler.endElement();
-            rs.close();
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        }
+        finally {
+            q.close();
         }
     }
 
-    public void readTupleSet(String name, String query) {
+    public void readTupleSet(String name, String query) throws SQLException {
         IloOplDataHandler handler = getDataHandler();
+        IloOplElement elt = handler.getElement(name);
+        ilog.opl_core.cppimpl.IloTupleSet tupleSet = (ilog.opl_core.cppimpl.IloTupleSet) elt.asTupleSet();
+        IloTupleSchema schema = tupleSet.getSchema_cpp();
+        int size = schema.getTotalColumnNumber();
+
+        String[] oplFieldsName = new String[size];
+        Type[] oplFieldsType = new Type[size];
+
+        fillNamesAndTypes(schema, oplFieldsName, oplFieldsType);
+
+        final RunQuery q = new RunQuery(query);
         try {
-            IloOplElement elt = handler.getElement(name);
-            ilog.opl_core.cppimpl.IloTupleSet tupleSet = (ilog.opl_core.cppimpl.IloTupleSet) elt.asTupleSet();
-            IloTupleSchema schema = tupleSet.getSchema_cpp();
-            int size = schema.getTotalColumnNumber();
-
-            String[] oplFieldsName = new String[size];
-            Type[] oplFieldsType = new Type[size];
-
-            fillNamesAndTypes(schema, oplFieldsName, oplFieldsType);
-
-            Connection conn = DriverManager.getConnection(_configuration.getUrl(),
-                    _configuration.getUser(),
-                    _configuration.getPassword());
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
+            ResultSet rs = q.getResult();
 
             handler.startElement(name);
             handler.startSet();
@@ -311,12 +302,9 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
             }
             handler.endSet();
             handler.endElement();
-            rs.close();
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-
+        finally {
+            q.close();
+        }
     }
 };
