@@ -150,6 +150,98 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
                 readSet(leaf, name, query);
             }
         }
+        else if ( type == Type.INTEGER || type == Type.FLOAT || type == Type.STRING ) {
+           readValue(name, query);
+        }
+        else
+           throw new IllegalArgumentException("Cannot read element " + name + " of type " + type);
+    }
+
+    /** Helper class to execute queries in an exception safe way.
+     * Use the class via the following template:
+     * <pre>
+     final RunQuery q = new RunQuery("SELECT * FROM table;");
+     try {
+        ResultSet rs = q.getResult();
+        ...
+     }
+     finally {
+        q.close();
+     }
+     </pre>
+     * This will correctly clean up and release all resources no matter whether
+     * an exception is throw or not.
+     */
+    private final class RunQuery {
+       private Connection conn = null;
+       private Statement stmt = null;
+       private ResultSet rs = null;
+       public RunQuery(String query) throws SQLException {
+          Connection conn = DriverManager.getConnection(_configuration.getUrl(),
+                                                        _configuration.getUser(),
+                                                        _configuration.getPassword());
+          Statement stmt = null;
+          ResultSet rs = null;
+          try {
+             stmt = conn.createStatement();
+             rs = stmt.executeQuery(query);
+             // Everything worked without problem. Transfer ownership of
+             // the objects to the newly constructed instance.
+             this.conn = conn; conn = null;
+             this.stmt = stmt; stmt = null;
+             this.rs = rs; rs = null;
+          }
+          finally {
+             if ( rs != null )  rs.close();
+             if ( stmt != null )  stmt.close();
+             if ( conn != null )  conn.close();
+          }
+       }
+       public void close() throws SQLException {
+          rs.close();
+          stmt.close();
+          conn.close();
+       }
+       ResultSet getResult() { return rs; }
+    }
+
+    /** Read the scalar value for <code>name</code> from <code>query</code>.
+     * <b>Note:</b> the function will just use the first value produced by
+     *              <code>query</code> and assign that to the element identified
+     *              by <code>name</code>. If the query produces more than one
+     *              value the surplus values are ignored.
+     * @param name The name of the element to fill.
+     * @param query The SQL query that produces the data for <code>name</code>.
+     * @throws SQLException if querying the database fails or the query does
+     *                      not produce at least one value.
+     */
+    public void readValue(String name, String query) throws SQLException {
+        IloOplElementDefinition def = _def.getElementDefinition(name);
+        IloOplDataHandler handler = getDataHandler();
+        final RunQuery q = new RunQuery(query);
+        try {
+           ResultSet rs = q.getResult();
+           rs.next();
+           handler.startElement(name);
+           Type type = def.getElementDefinitionType();
+           if (type == Type.INTEGER) {
+               handler.addIntItem(rs.getInt(1));
+           }
+           else if (type == Type.FLOAT) {
+               handler.addNumItem(rs.getDouble(1));
+           }
+           else if (type == Type.STRING) {
+               handler.addStringItem(rs.getString(1));
+           }
+           else
+              throw new IllegalArgumentException("Cannot load element " + name + " of type " + type);
+           handler.endElement();
+        }
+        finally {
+            // We don't use try-with-resources so that we can compile
+            // with pre-1.8 compilers as well.
+            q.close();
+        }
     }
 
     public void readSet(Type leaf, String name, String query) {
