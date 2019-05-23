@@ -215,7 +215,7 @@ public class JdbcConfiguration {
             
             // input parameters
             Node readNode = doc.getElementsByTagName(READ).item(0);
-            if (readNode.getNodeType() == Node.ELEMENT_NODE) {
+            if (readNode != null && readNode.getNodeType() == Node.ELEMENT_NODE) {
                 NodeList queries = ((Element)readNode).getElementsByTagName(QUERY);
                 for (int iquery = 0; iquery < queries.getLength(); iquery++) {
                     Node qNode = queries.item(iquery);
@@ -230,7 +230,7 @@ public class JdbcConfiguration {
             
             // write parameters
             Node writeNode = doc.getElementsByTagName(WRITE).item(0);
-            if (writeNode.getNodeType() == Node.ELEMENT_NODE) {
+            if (writeNode != null && writeNode.getNodeType() == Node.ELEMENT_NODE) {
                 NodeList tables = ((Element)writeNode).getElementsByTagName(TABLE);
                 for (int itable = 0; itable < tables.getLength(); itable++) {
                     Node tNode = tables.item(itable);
