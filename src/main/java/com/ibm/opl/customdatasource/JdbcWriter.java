@@ -102,16 +102,14 @@ public class JdbcWriter {
       return query;
     }
     
-    void updateValues(IloTuple tuple, IloTupleSchema schema, 
-                      IloOplTupleSchemaDefinition tupleSchemaDef, PreparedStatement stmt) throws SQLException {
-      for (int i = 0; i < schema.getSize(); i++) {
+    void updateValues(IloTuple tuple, PreparedStatement stmt, Type[] columnType) throws SQLException {
+      for (int i = 0; i < columnType.length; i++) {
           int index = i+1;  // index in PreparedStatement
-          Type columnType = tupleSchemaDef.getComponent(i).getElementDefinitionType();
-          if (columnType == Type.INTEGER)
+          if (columnType[i] == Type.INTEGER)
               stmt.setInt(index, tuple.getIntValue(i));
-          else if (columnType == Type.FLOAT)
+          else if (columnType[i] == Type.FLOAT)
               stmt.setDouble(index, tuple.getNumValue(i));
-          else if (columnType == Type.STRING)
+          else if (columnType[i] == Type.STRING)
               stmt.setString(index, tuple.getStringValue(i));
       }
     }
@@ -149,6 +147,9 @@ public class JdbcWriter {
             try {
               IloOplElementDefinition tupleDef = _def.getElementDefinition(schema.getName());
               IloOplTupleSchemaDefinition tupleSchemaDef = tupleDef.asTupleSchema();
+              final Type[] columnType = new Type[schema.getSize()];
+              for (int i = 0; i < columnType.length; ++i)
+                  columnType[i] = tupleSchemaDef.getComponent(i).getElementDefinitionType();
               
               conn.setAutoCommit(false); // begin transaction
               String psql = getInsertQuery(schema, table);
@@ -156,7 +157,7 @@ public class JdbcWriter {
               // iterate the set and create the final insert statement
               for (java.util.Iterator it1 = tupleSet.iterator(); it1.hasNext();) {
                   IloTuple tuple = (IloTuple) it1.next();
-                  updateValues(tuple, schema, tupleSchemaDef, pstmt);
+                  updateValues(tuple, pstmt, columnType);
                   pstmt.executeUpdate();
               }
               conn.commit();
