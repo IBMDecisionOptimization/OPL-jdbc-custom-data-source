@@ -16,10 +16,10 @@ This example will work with any 12.x OPL version, even if it is configured to ru
 ## Table of Contents
    - [Prerequisites](#prerequisites)
    - [Build and run the sample from java](#build-and-run-the-sample-from-java)
-      - [Build the sample](#build-the-sample)
-   - [Run the sample from OPL](#run-the-sample-from-opl)
+      - [Run the sample from OPL](#run-the-sample-from-opl)
+      - [Reusing the sample with other databases](#reusing-the-sample-with-other-databases)
    - [Export plain dat files](#export-plain-dat-files)
-   - [Run with a previous OPL version](#run-with-a-previous-opl-version)
+   - [Run with another OPL version](#run-with-another-opl-version)
    - [License](#license)   
    
 ### Prerequisites
@@ -59,6 +59,7 @@ using a jdbc-custom-data-source from `oplrun` or OPL Studio.
 
 
 ### Reusing the sample with other databases
+
 As the sample is build on JDBC, it's possible to reuse <code>JdbcCustomDataSource</code> with minimal changes:
 
 * Add your JDBC driver in your classpath

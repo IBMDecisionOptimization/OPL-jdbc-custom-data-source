@@ -48,9 +48,17 @@ public class JdbcConfiguration {
     public String getUser() {
         return _user;
     }
+    
+    public void setUser(String user) {
+      _user = user;
+    }
 
     public String getPassword() {
         return _password;
+    }
+    
+    public void setPassword(String password) {
+      _password = password;
     }
 
     public Properties getReadQueries() {

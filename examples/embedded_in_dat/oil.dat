@@ -16,6 +16,8 @@ prepare {
   // Now create JdbcConfiguration
   var config = IloOplCallJava("com.ibm.opl.customdatasource.JdbcConfiguration", "<init>", "");
   config.setUrl(connUrl);
+  config.setUser(userName);
+  config.setPassword(password);
 
   config.addReadQuery("Gasolines", "SELECT NAME FROM GASDATA");
   config.addReadQuery("Oils", "SELECT NAME FROM OILDATA");

@@ -1,4 +1,3 @@
-
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -64,53 +63,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<profiles>
-		<profile>
-			<id>binary.windows</id>
-			<activation>
-				<os>
-					<family>windows</family>
-				</os>
-			</activation>
-			<properties>
-				<binary.group>x64_windows</binary.group>
-			</properties>
-		</profile>
-		<profile>
-			<id>binary.linux</id>
-			<activation>
-				<os>
-					<name>Linux</name>
-					<arch>amd64</arch>
-				</os>
-			</activation>
-			<properties>
-				<binary.group>x86-64_linux</binary.group>
-			</properties>
-		</profile>
-		<profile>
-			<id>binary.plinux</id>
-			<activation>
-				<os>
-					<name>Linux</name>
-					<arch>ppc64le</arch>
-				</os>
-			</activation>
-			<properties>
-				<binary.group>ppc64le_linux</binary.group>
-			</properties>
-		</profile>
-		<profile>
-			<id>binary.osx</id>
-			<activation>
-				<os>
-					<name>Mac</name>
-				</os>
-			</activation>
-			<properties>
-				<binary.group>x86-64_osx</binary.group>
-			</properties>
-		</profile>
-	</profiles>
 </project>
