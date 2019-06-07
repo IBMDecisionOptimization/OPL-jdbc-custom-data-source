@@ -39,8 +39,8 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
       JdbcConfiguration _config;
       
       
-      JdbcCustomDataSourcePublisher(IloOplFactory factory, IloOplModel model, JdbcConfiguration config) {
-        super(factory);
+      JdbcCustomDataSourcePublisher(IloOplModel model, JdbcConfiguration config) {
+        super(IloOplFactory.getOplFactoryFrom(model));
         _model = model;
         _config = config;
       }
@@ -60,11 +60,12 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
      *
      * @param xmlFile The xml configuration for the data source
      * @param model The OPL Model
+     * @return the custom datasource
      */
-    public static void addDataSourceXMLConfig(String xmlFile, IloOplModel model) throws IOException {
+    public static JdbcCustomDataSource addDataSourceXMLConfig(String xmlFile, IloOplModel model) throws IOException {
         JdbcConfiguration config = new JdbcConfiguration();
         config.read(xmlFile);
-        addDataSource(config, model);
+        return addDataSource(config, model);
     }
     
     /**
@@ -72,13 +73,15 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
      *
      * @param config The JDBC configuration object
      * @param model The OPL Model
+     * @return the custom datasource
      */
-    public static void addDataSource(JdbcConfiguration config, IloOplModel model) {
+    public static JdbcCustomDataSource addDataSource(JdbcConfiguration config, IloOplModel model) {
         IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
         IloOplModelDefinition definition = model.getModelDefinition();
         JdbcCustomDataSource source = new JdbcCustomDataSource(config, factory, definition);
         model.addDataSource(source);
-        model.registerPostProcessListener(new JdbcCustomDataSourcePublisher(factory, model, config));
+        model.registerPostProcessListener(new JdbcCustomDataSourcePublisher(model, config));
+        return source;
     }
     
     /**
@@ -103,7 +106,7 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
             names[i] = columnName;
         }
     }
-
+    
     /**
      * Overrides the IloCustomOplDataSource method to read data when the model
      * is generated.
@@ -200,7 +203,62 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
        }
        ResultSet getResult() { return rs; }
     }
-
+    
+    /** Helper class to execute statements in an exception safe way.
+     * Use the class via the following template:
+     * <pre>
+     final ExecuteStatement q = new ExecuteStatement("CREATE TABLE t (x INT, y STRING);");
+     try {
+        boolean result = q.getResult();
+        ...
+     }
+     finally {
+        q.close();
+     }
+     </pre>
+     * If getResult() is true, the ResultSet can be retrieved using getResultSet().
+     *
+     * This will correctly clean up and release all resources no matter whether
+     * an exception is throw or not.
+     */
+    private final class ExecuteStatement {
+       private Connection conn = null;
+       private Statement stmt = null;
+       private boolean result = false;
+       private ResultSet rs = null;
+       public ExecuteStatement(String query) throws SQLException {
+          Connection conn = DriverManager.getConnection(_configuration.getUrl(),
+                                                        _configuration.getUser(),
+                                                        _configuration.getPassword());
+          Statement stmt = null;
+          ResultSet rs = null;
+          try {
+             stmt = conn.createStatement();
+             result = stmt.execute(query);
+             if (result)
+               rs = stmt.getResultSet();
+             // Everything worked without problem. Transfer ownership of
+             // the objects to the newly constructed instance.
+             this.conn = conn; conn = null;
+             this.stmt = stmt; stmt = null;
+             this.rs = rs; rs = null;
+          }
+          finally {
+             if ( rs != null )  rs.close();
+             if ( stmt != null )  stmt.close();
+             if ( conn != null )  conn.close();
+          }
+       }
+       public void close() throws SQLException {
+          rs.close();
+          stmt.close();
+          conn.close();
+       }
+       boolean getResult() { return result; }
+       ResultSet getResultSet() { return rs; }
+    }
+    
+    
     /** Read the scalar value for <code>name</code> from <code>query</code>.
      * <b>Note:</b> the function will just use the first value produced by
      *              <code>query</code> and assign that to the element identified
@@ -318,5 +376,20 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         finally {
             q.close();
         }
+    }
+    
+    /**
+     * Utility method to execute a statement using the jdbc connection configured for this source
+     * @param sql The SQL query or statement
+     * @return true if the query or statement returned a ResultSet, false if it is an update count
+     *         or there are no results.
+     */
+    public boolean execute(String sql) throws SQLException {
+      ExecuteStatement s = new ExecuteStatement(sql);
+      try {
+        return s.getResult();
+      } finally {
+        s.close();
+      }
     }
 };
