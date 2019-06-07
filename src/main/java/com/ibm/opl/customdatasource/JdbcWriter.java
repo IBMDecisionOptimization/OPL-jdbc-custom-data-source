@@ -24,9 +24,11 @@ import java.util.Properties;
  *
  */
 public class JdbcWriter {
+    private static long DEFAULT_BATCH_SIZE = 10000;
     private JdbcConfiguration _configuration;
     private IloOplModelDefinition _def;
     private IloOplModel _model;
+    private long _batch_size;
     
     /**
      * Convenience method to write the output of a model to a database.
@@ -44,6 +46,7 @@ public class JdbcWriter {
         _configuration = configuration;
         _def = def;
         _model = model;
+        _batch_size = DEFAULT_BATCH_SIZE;
     }
 
     public void customWrite() {
@@ -176,14 +179,29 @@ public class JdbcWriter {
               String psql = getInsertQuery(schema, table);
               insert = conn.prepareStatement(psql);
               // iterate the set and create the final insert statement
+              long icount = 1;
               for (java.util.Iterator it1 = tupleSet.iterator(); it1.hasNext();) {
                   IloTuple tuple = (IloTuple) it1.next();
                   updateValues(tuple, schema, tupleSchemaDef, insert);
-                  insert.executeUpdate();
+                  if (_batch_size == 0) {
+                    // no batch
+                    insert.executeUpdate();
+                  }
+                  else {
+                    insert.addBatch();
+                    if (icount % _batch_size == 0) {
+                      insert.executeBatch();
+                    }
+                  }
+                  icount ++;
+              }
+              if (_batch_size == 0) {
+                insert.executeBatch();
               }
               conn.commit();
             } catch (SQLException e) {
               conn.rollback();
+              throw e;
             } finally {
               if (insert != null)
                 insert.close();
