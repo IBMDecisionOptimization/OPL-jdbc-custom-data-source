@@ -4,7 +4,7 @@ This sample demonstrates how to use the IBM Decision Optimization Modeling with
 OPL custom data source API to import data from a JDBC data source into an OPL model.
 
 This sample illustrates the [Subclassing IloCustomOplDataSoource](https://www.ibm.com/support/knowledgecenter/en/SSSA5P_12.7.0/ilog.odms.ide.help/OPL_Studio/opllanguser/topics/opl_languser_extfunc_datasubcl.html) section from the OPL User's manual.
-This sample shows how to read and write tuplesets to/from a database with Java. It also enables you to read a database and generate .dat files to be used in the IDE to prototype your optimization model.
+This sample shows how to read and write tuplesets to/from a database with Java. It also enables you to read a database and [generate .dat files](#export_dat_files) to be used in the IDE to prototype your optimization model.
 
 While this sample uses MySQL as data storage, it can be easily adapted to
 any database that has JDBC drivers.
@@ -200,8 +200,11 @@ As the sample is build on JDBC, it's possible to reuse <code>JdbcCustomDataSourc
 	}
 	```
 
-## Export .dat files
-* When running the `ant` command with the DB2/mysql target, simply add `-Dexport=result.dat` on the command line, and it will export all the tuplesets that have been extracted from the database to `result.dat` file.
+## Export .dat files for use in OPL IDE
+<a name="export_dat_files"></a>
+
+* When running the `ant` command with the DB2/mysql target, simply add `-Dexport=model.dat` on the command line, and it will export all the tuplesets that have been extracted from the database to `model.dat` file.
+* This allow you to import your data into the OPL IDE.
 
 ## Run with an OPL version <= 12.6.x
 * Edit the build.xml at the root of the directory, and adapt the `example.home` variable to point to your 12.x version.
