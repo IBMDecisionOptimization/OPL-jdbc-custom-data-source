@@ -1,19 +1,43 @@
 package com.ibm.opl.customdatasource;
 
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.*;
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * The class to store JDBC custom data source connection parameters.
  */
 public class JdbcConfiguration {
     Properties _readProperties = new Properties();
-    Properties _writeProperties = new Properties();
+    
+    public static class OutputParameters {
+      public OutputParameters(boolean autodrop,
+          String createStatement,String insertStatement, String target) {
+        this.autodrop = autodrop;
+        this.createStatement = createStatement;
+        this.insertStatement = insertStatement;
+        this.outputTable = target;
+      }
+      boolean autodrop = true;
+      // if a statement is null but outputTable is not, generate automatically
+      String createStatement = null;
+      String insertStatement = null;
+      // parameters for automatic generation, used in jdbcWriter
+      String outputTable = null;
+    }
+    
+    Map<String, OutputParameters> _outputMapping = new HashMap<String, OutputParameters>();
 
     private final static String URL = "url";
     private final static String USER = "user";
@@ -75,18 +99,33 @@ public class JdbcConfiguration {
     public void addReadQuery(String name, String query) {
       _readProperties.setProperty(name, query);
     }
-
-    public Properties getWriteMapping() {
-        return _writeProperties;
+    
+    public Map<String, OutputParameters> getOutputMapping() {
+      return _outputMapping;
     }
     
     /**
      * Adds a write mapping to the datasource.
+     * 
+     * Using this method is equivalent to configure the output source with:
+     * 
+     * - Autodrop: The output table is dropped if it exists
+     * - A default CREATE TABLE statement is generated for that table.
+     * - A default INSERT statement is generated for that table.
      * @param name The OPL output name.
      * @param target The database table to map the output to.
      */
     public void addWriteMapping(String name, String target) {
-      _writeProperties.setProperty(name, target);
+      addOutputParameters(name, true, null, null, target);
+    }
+    
+    public void addOutputParameters(String name, boolean autodrop,
+      String createStatement, String insertStatement, String target) {
+      _outputMapping.put(name, new OutputParameters(autodrop, createStatement, insertStatement, target));
+    }
+    
+    public void addInsertStatement(String name, String insertStatement) {
+      _outputMapping.put(name, new OutputParameters(false, null, insertStatement, null));
     }
     
     /**
@@ -163,7 +202,7 @@ public class JdbcConfiguration {
             } else if (name.startsWith(write)) {
                 int pos = write.length();
                 String element = name.substring(pos);
-                _writeProperties.setProperty(element, (String) properties.getProperty(name));
+                addWriteMapping(element, (String)properties.getProperty(name));
             }
         }
     }
@@ -246,12 +285,89 @@ public class JdbcConfiguration {
                         Element tElement = (Element)tNode;
                         String name = tElement.getAttribute(NAME);
                         String target = tElement.getAttribute(TARGET);
-                        _writeProperties.setProperty(name, target);
+                        addWriteMapping(name, target);
                     }
                 }
             }
         } catch (ParserConfigurationException | SAXException e) {
             throw new RuntimeException("Could not read XML configuration");
         }
+    }
+    
+    /**
+     * Utility method to execute a statement using the jdbc connection configured for this source
+     * @param sql The SQL query or statement
+     * @return true if the query or statement returned a ResultSet, false if it is an update count
+     *         or there are no results.
+     */
+    public void execute(String sql) {
+      ExecuteStatement s = null;
+      try {
+        s = new ExecuteStatement(sql);
+        s.getResult();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      } finally {
+        if (s != null)
+          try {
+            s.close();
+          } catch (SQLException e) {
+            e.printStackTrace();
+          }
+      }
+    }
+    
+    /** Helper class to execute statements in an exception safe way.
+     * Use the class via the following template:
+     * <pre>
+     final ExecuteStatement q = new ExecuteStatement("CREATE TABLE t (x INT, y STRING);");
+     try {
+        boolean result = q.getResult();
+        ...
+     }
+     finally {
+        q.close();
+     }
+     </pre>
+     * If getResult() is true, the ResultSet can be retrieved using getResultSet().
+     *
+     * This will correctly clean up and release all resources no matter whether
+     * an exception is throw or not.
+     */
+    private final class ExecuteStatement {
+       private Connection conn = null;
+       private Statement stmt = null;
+       private boolean result = false;
+       private ResultSet rs = null;
+       public ExecuteStatement(String query) throws SQLException {
+          Connection conn = DriverManager.getConnection(JdbcConfiguration.this.getUrl(),
+              JdbcConfiguration.this.getUser(),
+              JdbcConfiguration.this.getPassword());
+          Statement stmt = null;
+          ResultSet rs = null;
+          try {
+             stmt = conn.createStatement();
+             result = stmt.execute(query);
+             if (result)
+               rs = stmt.getResultSet();
+             // Everything worked without problem. Transfer ownership of
+             // the objects to the newly constructed instance.
+             this.conn = conn; conn = null;
+             this.stmt = stmt; stmt = null;
+             this.rs = rs; rs = null;
+          }
+          finally {
+             if ( rs != null )  rs.close();
+             if ( stmt != null )  stmt.close();
+             if ( conn != null )  conn.close();
+          }
+       }
+       public void close() throws SQLException {
+          if (rs != null)  rs.close();
+          if (stmt != null)  stmt.close();
+          if (conn != null)  conn.close();
+       }
+       boolean getResult() { return result; }
+       ResultSet getResultSet() { return rs; }
     }
 }

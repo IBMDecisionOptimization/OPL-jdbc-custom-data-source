@@ -378,18 +378,5 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         }
     }
     
-    /**
-     * Utility method to execute a statement using the jdbc connection configured for this source
-     * @param sql The SQL query or statement
-     * @return true if the query or statement returned a ResultSet, false if it is an update count
-     *         or there are no results.
-     */
-    public boolean execute(String sql) throws SQLException {
-      ExecuteStatement s = new ExecuteStatement(sql);
-      try {
-        return s.getResult();
-      } finally {
-        s.close();
-      }
-    }
+
 };
