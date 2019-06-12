@@ -1,0 +1,31 @@
+<project name="externaldataread" default="run">
+	<property environment="env"/>
+	
+	<condition property="example.home" value="${env.CPLEX_STUDIO_DIR128}/opl">
+	<isset property="env.CPLEX_STUDIO_DIR128"/>
+	</condition>
+	<property name="example.home" value="${opl.home}">
+	</property>
+	
+	
+	<import file="${example.home}/examples/opl_interfaces/java/build_common.xml"/>
+	<condition property="oplrun.binary" value="oplrunjava">
+		<os family="unix"/>
+	</condition>
+	<property name="oplrun.binary" value="oplrun"/>
+
+	<target name="run" depends="platform">
+		<exec executable="${example.home}/bin/${example.platform}/${oplrun.binary}">
+			<arg value="oil.mod"/>
+			<arg value="oil.dat"/>
+			<env key="ODMS_JAVA_ARGS" value='-classpath "${example.home}/lib/oplall.jar"' />
+			<env key="PATH" path="${example.home}/bin/${example.platform}${platform.separator}${env.PATH}"/>
+			<env key="Path" path="${example.home}/bin/${example.platform}${platform.separator}${env.Path}"/>
+			<env key="LD_LIBRARY_PATH" path="${example.home}/bin/${example.platform}${platform.separator}${env.JAVA_HOME}/jre/bin${platform.separator}${env.JAVA_HOME}/jre/bin/j9vm${platform.separator}${env.JAVA_HOME}/jre/bin/classic"/>
+			<env key="LIBPATH" path="${example.home}/bin/${example.platform}${platform.separator}${env.JAVA_HOME}/jre/bin${platform.separator}${env.JAVA_HOME}/jre/bin/j9vm${platform.separator}${env.JAVA_HOME}/jre/bin/classic"/>
+			<env key="DYLD_LIBRARY_PATH" path="${example.home}/bin/${example.platform}${platform.separator}${env.DYLD_LIBRARY_PATH}"/>
+			<env key="LD_PRELOAD_64" path="${preload_64}"/>
+		</exec>
+	</target>
+
+</project>
