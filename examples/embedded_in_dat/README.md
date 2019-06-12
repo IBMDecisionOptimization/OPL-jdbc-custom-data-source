@@ -1,4 +1,4 @@
-# Example using IloOplCallJava
+# Example using IloOplCallJava in .dat files
 
 This sample is basically the same as [ilo_opl_call_java](../ilo_opl_call_java).
 
