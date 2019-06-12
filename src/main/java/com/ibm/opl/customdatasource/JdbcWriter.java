@@ -148,11 +148,14 @@ public class JdbcWriter {
               // drop existing table if exists
               if (op.autodrop) {
                 DatabaseMetaData dbm = conn.getMetaData();
+                boolean exists = false;
                 try (ResultSet rs = dbm.getTables(null, null, table, null)) {
-                  boolean exists = rs.next();
-                  if (exists) {
-                    sql = DROP_QUERY.replaceFirst("%", table);
-                    stmt.executeUpdate(sql);
+                  exists = rs.next();
+                }
+                if (exists) {
+                  sql = DROP_QUERY.replaceFirst("%", table);
+                  try (Statement drop = conn.createStatement()) {
+                    drop.executeUpdate(sql);
                   }
                 }
               }
