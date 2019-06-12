@@ -112,19 +112,19 @@ public class JdbcWriter {
       return query;
     }
     
-    void updateValues(IloTuple tuple, IloTupleSchema schema, 
-                      IloOplTupleSchemaDefinition tupleSchemaDef, PreparedStatement stmt) throws SQLException {
-      for (int i = 0; i < schema.getSize(); i++) {
-          int index = i+1;  // index in PreparedStatement
-          Type columnType = tupleSchemaDef.getComponent(i).getElementDefinitionType();
-          if (columnType == Type.INTEGER)
-              stmt.setInt(index, tuple.getIntValue(i));
-          else if (columnType == Type.FLOAT)
-              stmt.setDouble(index, tuple.getNumValue(i));
-          else if (columnType == Type.STRING)
-              stmt.setString(index, tuple.getStringValue(i));
-      }
+  void updateValues(IloTuple tuple, IloTupleSchema schema,
+      IloOplTupleSchemaDefinition tupleSchemaDef, PreparedStatement stmt) throws SQLException {
+    for (int i = 0; i < schema.getSize(); i++) {
+      int index = i + 1; // index in PreparedStatement
+      Type columnType = tupleSchemaDef.getComponent(i).getElementDefinitionType();
+      if (columnType == Type.INTEGER)
+        stmt.setInt(index, tuple.getIntValue(i));
+      else if (columnType == Type.FLOAT)
+        stmt.setDouble(index, tuple.getNumValue(i));
+      else if (columnType == Type.STRING)
+        stmt.setString(index, tuple.getStringValue(i));
     }
+  }
 
     static final String DROP_QUERY = "DROP TABLE %";
 
@@ -173,6 +173,9 @@ public class JdbcWriter {
             try {
               IloOplElementDefinition tupleDef = _def.getElementDefinition(schema.getName());
               IloOplTupleSchemaDefinition tupleSchemaDef = tupleDef.asTupleSchema();
+              final Type[] columnType = new Type[schema.getSize()];
+              for (int i = 0; i < columnType.length; ++i)
+                  columnType[i] = tupleSchemaDef.getComponent(i).getElementDefinitionType();
               
               String psql = null;
               if (op.outputTable != null && op.insertStatement == null) {

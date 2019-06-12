@@ -54,6 +54,23 @@ public class JdbcConfiguration {
     private String _url = null;
     private String _user = null;
     private String _password = null;
+
+    /** Resolve <code>s</code> using environment variables.
+     * If <code>s</code> starts with "$" and is the name of an existing
+     * environment variable then return the value of that variable, otherwise
+     * return <code>s</code>.
+     * @param s The string to resolve.
+     * @return The value of environment variable <code>s</code> if such a
+     *         variable exists, <code>s</code> otherwise.
+     */
+    private static String resolveString(String s) {
+        if ( s == null || s.length() < 2 || s.charAt(0) != '$' )
+            return s;
+        final String value = System.getenv(s.substring(1));
+        if ( value != null )
+            return value;
+        return s;
+    }
     
     /**
      * Creates a new JDBC configuration.
@@ -70,17 +87,17 @@ public class JdbcConfiguration {
     }
     
     public String getUser() {
-        return _user;
+        return resolveString(_user);
     }
-    
+
     public void setUser(String user) {
       _user = user;
     }
 
     public String getPassword() {
-        return _password;
+        return resolveString(_password);
     }
-    
+
     public void setPassword(String password) {
       _password = password;
     }
