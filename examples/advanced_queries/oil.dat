@@ -14,19 +14,23 @@ prepare {
   var password = "";
   
   // Now create JdbcConfiguration
+
   var config = IloOplCallJava("com.ibm.opl.customdatasource.JdbcConfiguration", "<init>", "");
   config.setUrl(connUrl);
   config.setUser(userName);
   config.setPassword(password);
+
+  config.execute("DROP TABLE result");
+  config.execute("CREATE TABLE result(oil VARCHAR(30), gas VARCHAR(30), blend FLOAT, a FLOAT)");
+
 
   config.addReadQuery("Gasolines", "SELECT NAME FROM GASDATA");
   config.addReadQuery("Oils", "SELECT NAME FROM OILDATA");
   config.addReadQuery("GasData", "SELECT * FROM GASDATA");
   config.addReadQuery("OilData", "SELECT * FROM OILDATA");
   
-  // Maps result table "Results" to database table "result"
-  config.addWriteMapping("Result", "result");
-  
+  // Maps result table "Results" to that insert statement
+  config.addInsertStatement("Result", "INSERT INTO result(oil, gas, blend, a) VALUES (?,?,?,?)");
 
   // add custom data source
   IloOplCallJava("com.ibm.opl.customdatasource.JdbcCustomDataSource",

@@ -3,7 +3,6 @@ package com.ibm.opl.customdatasource;
 import ilog.concert.IloTuple;
 import ilog.opl.IloOplElement;
 import ilog.opl.IloOplElementDefinition;
-import ilog.opl.IloOplFactory;
 import ilog.opl.IloOplElementDefinitionType.Type;
 import ilog.opl.IloOplModel;
 import ilog.opl.IloOplModelDefinition;
@@ -11,24 +10,36 @@ import ilog.opl.IloOplTupleSchemaDefinition;
 import ilog.opl_core.cppimpl.IloTupleSchema;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Properties;
+
+import com.ibm.opl.customdatasource.JdbcConfiguration.OutputParameters;
 
 /**
  * The class to write data using JDBC.
  *
  */
 public class JdbcWriter {
+    private static long DEFAULT_BATCH_SIZE = 10000;
     private JdbcConfiguration _configuration;
     private IloOplModelDefinition _def;
     private IloOplModel _model;
+    private long _batch_size;
     
+    /**
+     * Convenience method to write the output of a model to a database.
+     * 
+     * @param config The database connection configuration.
+     * @param model The OPL model.
+     */
     public static void writeOutput(JdbcConfiguration config, IloOplModel model) {
-      IloOplFactory factory = IloOplFactory.getOplFactoryFrom(model);
       IloOplModelDefinition definition = model.getModelDefinition();
       JdbcWriter writer = new JdbcWriter(config, definition, model);
       writer.customWrite();
@@ -38,18 +49,18 @@ public class JdbcWriter {
         _configuration = configuration;
         _def = def;
         _model = model;
+        _batch_size = DEFAULT_BATCH_SIZE;
     }
 
     public void customWrite() {
         long startTime = System.currentTimeMillis();
         System.out.println("Writing elements to database");
-        Properties prop = _configuration.getWriteMapping();
-        Enumeration<?> propertyNames = prop.propertyNames();
-        while (propertyNames.hasMoreElements()) {
-            String name = (String) propertyNames.nextElement();
-            String table = prop.getProperty(name);
-            System.out.println("Writing " + name + " using table " + table + "");
-            customWrite(name, table);
+        Map<String, JdbcConfiguration.OutputParameters> outputMapping = _configuration.getOutputMapping();
+
+        for (String name : outputMapping.keySet()) {
+          JdbcConfiguration.OutputParameters op = outputMapping.get(name);
+          System.out.println("Writing " + name);
+          customWrite(name, op);
         }
         long endTime = System.currentTimeMillis();
         System.out.println("Done (" + (endTime - startTime)/1000.0 + " s)");
@@ -76,7 +87,6 @@ public class JdbcWriter {
                 query += ", ";
         }
         query += ")";
-        // System.out.println("Create query = " + query);
         return query;
     }
 
@@ -102,25 +112,30 @@ public class JdbcWriter {
       return query;
     }
     
-    void updateValues(IloTuple tuple, PreparedStatement stmt, Type[] columnType) throws SQLException {
-      for (int i = 0; i < columnType.length; i++) {
-          int index = i+1;  // index in PreparedStatement
-          if (columnType[i] == Type.INTEGER)
-              stmt.setInt(index, tuple.getIntValue(i));
-          else if (columnType[i] == Type.FLOAT)
-              stmt.setDouble(index, tuple.getNumValue(i));
-          else if (columnType[i] == Type.STRING)
-              stmt.setString(index, tuple.getStringValue(i));
-      }
+  void updateValues(IloTuple tuple, IloTupleSchema schema,
+      IloOplTupleSchemaDefinition tupleSchemaDef, PreparedStatement stmt) throws SQLException {
+    for (int i = 0; i < schema.getSize(); i++) {
+      int index = i + 1; // index in PreparedStatement
+      Type columnType = tupleSchemaDef.getComponent(i).getElementDefinitionType();
+      if (columnType == Type.INTEGER)
+        stmt.setInt(index, tuple.getIntValue(i));
+      else if (columnType == Type.FLOAT)
+        stmt.setDouble(index, tuple.getNumValue(i));
+      else if (columnType == Type.STRING)
+        stmt.setString(index, tuple.getStringValue(i));
     }
+  }
 
     static final String DROP_QUERY = "DROP TABLE %";
 
-    void customWrite(String name, String table) {
-        IloOplElementDefinition def = _def.getElementDefinition(name);
-        Type type = def.getElementDefinitionType();
-        Type leaf = def.getLeaf().getElementDefinitionType();
-
+    /**
+     * Writes a model element to database.
+     * 
+     * @param name The model element name.
+     * @param table The database table.
+     */
+    void customWrite(String name, OutputParameters op) {
+      String table = op.outputTable;
         IloOplElement elt = _model.getElement(name);
         ilog.opl_core.cppimpl.IloTupleSet tupleSet = (ilog.opl_core.cppimpl.IloTupleSet) elt.asTupleSet();
         IloTupleSchema schema = tupleSet.getSchema_cpp();
@@ -128,22 +143,33 @@ public class JdbcWriter {
         try {
             conn = DriverManager.getConnection(_configuration.getUrl(), _configuration.getUser(),
                     _configuration.getPassword());
-            Statement stmt = conn.createStatement();
-            String sql;
-            // drop existing table
-            try {
-                sql = DROP_QUERY.replaceFirst("%", table);
-                // System.out.println(sql);
-                stmt.executeUpdate(sql);
-            } catch (SQLException e) {
-                // table does not exists,
-            }
-            // create table using tuple fields
-            // first create query
-            sql = createTableQuery(schema, table);
-            // System.out.println(sql);
-            stmt.executeUpdate(sql);
-            
+            try (Statement stmt = conn.createStatement()) {
+              String sql;
+              // drop existing table if exists
+              if (op.autodrop) {
+                DatabaseMetaData dbm = conn.getMetaData();
+                try (ResultSet rs = dbm.getTables(null, null, table, null)) {
+                  boolean exists = rs.next();
+                  if (exists) {
+                    sql = DROP_QUERY.replaceFirst("%", table);
+                    stmt.executeUpdate(sql);
+                  }
+                }
+              }
+              
+              // create table using tuple fields
+              // first create query
+              sql = null;
+              if (op.outputTable != null && op.createStatement == null) {
+                sql = createTableQuery(schema, table);
+              } else if (op.createStatement != null) {
+                sql = op.createStatement;
+              }
+              if (sql != null) {
+                stmt.execute(sql);
+              }
+            } 
+            PreparedStatement insert = null;
             try {
               IloOplElementDefinition tupleDef = _def.getElementDefinition(schema.getName());
               IloOplTupleSchemaDefinition tupleSchemaDef = tupleDef.asTupleSchema();
@@ -151,20 +177,43 @@ public class JdbcWriter {
               for (int i = 0; i < columnType.length; ++i)
                   columnType[i] = tupleSchemaDef.getComponent(i).getElementDefinitionType();
               
+              String psql = null;
+              if (op.outputTable != null && op.insertStatement == null) {
+                psql = getInsertQuery(schema, table);
+              } else {
+                psql = op.insertStatement;
+              }
+              insert = conn.prepareStatement(psql);
+              
               conn.setAutoCommit(false); // begin transaction
-              String psql = getInsertQuery(schema, table);
-              PreparedStatement pstmt = conn.prepareStatement(psql);
               // iterate the set and create the final insert statement
+              long icount = 1;
               for (java.util.Iterator it1 = tupleSet.iterator(); it1.hasNext();) {
                   IloTuple tuple = (IloTuple) it1.next();
-                  updateValues(tuple, pstmt, columnType);
-                  pstmt.executeUpdate();
+                  updateValues(tuple, schema, tupleSchemaDef, insert);
+                  if (_batch_size == 0) {
+                    // no batch
+                    insert.executeUpdate();
+                  }
+                  else {
+                    insert.addBatch();
+                    if ((icount % _batch_size) == 0) {
+                      insert.executeBatch();
+                    }
+                  }
+                  icount ++;
+              }
+              if (_batch_size != 0) {
+                insert.executeBatch();
               }
               conn.commit();
             } catch (SQLException e) {
               conn.rollback();
+              throw e;
+            } finally {
+              if (insert != null)
+                insert.close();
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {

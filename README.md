@@ -16,13 +16,10 @@ This example will work with any 12.x OPL version, even if it is configured to ru
 ## Table of Contents
    - [Prerequisites](#prerequisites)
    - [Build and run the sample from java](#build-and-run-the-sample-from-java)
-      - [Build the sample](#build-the-sample)
-      - [Run sample with DB2](#run-sample-with-db2)
-      - [Run sample with MySQL](#run-sample-with-mysql)
-      - [Run sample with MS SQL Server](#run-sample-with-ms-sql-server)
-   - [Run the sample from OPL](#run-the-sample-from-opl)
+      - [Run the sample from OPL](#run-the-sample-from-opl)
+      - [Reusing the sample with other databases](#reusing-the-sample-with-other-databases)
    - [Export plain dat files](#export-plain-dat-files)
-   - [Run with a previous OPL version](#run-with-a-previous-opl-version)
+   - [Run with another OPL version](#run-with-another-opl-version)
    - [License](#license)   
    
 ### Prerequisites
@@ -48,165 +45,9 @@ This example will work with any 12.x OPL version, even if it is configured to ru
 
 The default sample uses model and data from [examples/oil](examples/oil)
 
-### Build the sample
-
-Before you build the sample, you must edit `build.properties` for the appropriate path locations:
-
-* If you want to run the sample with MySQL, `mysql.jdbc.connector.path` should point to your JDBC driver location.
-* If you want to run the sample with IBM DB2, `db2.jdbc.connector.path` should point to your JDBC driver location.
-* `opl.home` should point to your OPL home, unless you have a `CPLEX_STUDIO_DIR128` set. (this variable should exists if you installed on a Windows machine).
-
-The build file, `build.xml`, imports the build file from the OPL samples,
-in `<opl home>/examples/opl_interfaces/java/build_common.xml`.
-This build file defines all variables that are needed to configure the execution.
-
-The example is compiled using the `compile` Ant target:
-```
-ant compile
-```
-The example is automatically compiled with the run Ant targets is invoked.
-
-
-
-
-### Run sample with DB2
-
-#### Setup the sample database
-
-
-To run the sample with DB2. you need to install DB2. DB2 Express-C is a free
-community edition of DB2. DB2 Express-C is available on Microsoft Windows,
-Linux and Mac OS.
-
-You can download and install DB2 Express-C from [here](https://www.ibm.com/developerworks/downloads/im/db2express/).
-
-
-In a <em>DB2 Command Window</em>:
-
-Create database using `db2 create database CUSTOMDB`
-
-Run the following SQL script to create and populate the example database:
-```
-db2 -tvmf data/oil_db2.sql
-```
-
-Before you run the sample, you need to edit `build.properties` to make `db2.jdbc.connector.path` point
-to your DB2 jdbc driver.
-
-You can download the DB2 jdbc driver [here](http://www-01.ibm.com/support/docview.wss?uid=swg21363866).
-Note that if you installed DB2 Express-C, your JDBC driver is `db2jcc4.jar`
-in `<DB2 installdir>/SQLLIB/java`.
-
-Edit `data\db_db2.xml` for your JDBC connection string and credentials.
-Your connection string looks like `db2://localhost:<port>/<database_name>`
-where `port` is the DB2 port (default is 50000), `<database_name>` is the name
-of your database (default is `CUSTOMDB`).
-
-#### Run the sample
-Compile and run the sample for IBM DB2:
-
-```
-$ ant run_db2
-```
-
-* Uses data/oil.mod as a model file
-* Uses data/oil.dat as a data file
-* Uses data/db_db2.xml to customize the JDBC custom data source.
-
-
-
-
-
-### Run sample with MySQL
-
-#### Setup the sample database
-To run the sample with MySQL, you need to install MySQL. MySQL Community Server is a free edition of MySQL.
-
-On Microsoft Windows, you can download and install it from [here](https://dev.mysql.com/downloads/mysql/).
-
-On other plateforms, MySQL Community Server is available with most package
-managers. Please refer to the [installation instructions](https://dev.mysql.com/doc/refman/5.7/en/installing.html).
-
-You can check your MySQL installation by running <code>mysqladmin</code>.
-This binary would be available in /usr/bin on linux and <msysql install dir>/bin
-on Windows.
-	  
-```
-[root@host]# mysqladmin --version
-```
-
-Before you run the sample, you need to run the script to create and populate
-sample tables.
-
-Edit `data\oil_mysql.sql` for your database name. The default for the script is
-to create a new database. If you are not an administrator or if you don't
-have the permissions to create database, edit the first lines to use your
-database.
-
-Run the script with:
-
-```
-$ mysql < data\oil_mysql.sql
-```
-
-You also need to download the [JDBC driver for MySQL: MySQL Connector/J](https://dev.mysql.com/downloads/connector/j/)
-
-Once the driver is download and extracted, edit property `jdbc.connector.path` in `build.properties`
-to include the MySQL Connector/J `.jar` (should look like `mysql-connector-java-5.1.40-bin.jar`
-in your MySQL Connector/J extracted diretory)
-
-Edit `data\db_mysql.xml` for your JDBC connection string and credentials.
-Your connection string looks like `jdbc:mysql://localhost:3306/<database_name>?useSSL=false`
-where `<database_name>` is the name of your database (default is `custom_data_source`).
-
-#### Run the sample
-
-Compile and run the sample for MySQL:
-
-```
-$ ant run_mysql
-```
-
-* Uses data/oil.mod as a model file
-* Uses data/oil.dat as a data file
-* Uses data/db_mysql.xml to customize the JDBC custom data source.
-
-
-### Run sample with MS SQL Server
-
-#### Setup the sample database
-
-
-To run the sample with MS SQL Server, you need to install MS SQL Server. 
-
-In a <em>Commnad Prompt</em> window:
-
-Provided your sql server instance name is SQLEXPRESS, create database using:
-
-```
-C:\>sqlcmd -S .\SQLEXPRESS -i data\oil_mssql.sql
-```
-
-Before you run the sample, you need to edit `build.properties` to make `sqlserver.jdbc.connector.path` point
-to your MSSQL server jdbc driver (i.e. mssql-jdbc-7.2.2.jre8.jar)
-
-Edit `data\db_mssql.xml` for your JDBC connection string and credentials.
-Your connection string looks like `	jdbc:sqlserver://localhost;instanceName=<instance>;databaseName=<database_name>;integratedSecurity=true`
-
-where `instance` is the mssql instance name (default is SQLEXPRESS), `<database_name>` is the name
-of your database (default is `custom_data_source`).
-
-#### Run the sample
-Compile and run the sample for MS SQL Server:
-
-```
-$ ant run_mssql
-```
-
-* Uses data/oil.mod as a model file
-* Uses data/oil.dat as a data file
-* Uses data/db_db2.xml to customize the JDBC custom data source.
-
+- [Run sample with DB2](README.DB2.md)
+- [Run sample with MySQL](README.MySQL.md)
+- [Run sample with MS SQL Server](README.SQLServer.md)
 
 
 ### Run the sample from OPL
@@ -218,6 +59,7 @@ using a jdbc-custom-data-source from `oplrun` or OPL Studio.
 
 
 ### Reusing the sample with other databases
+
 As the sample is build on JDBC, it's possible to reuse <code>JdbcCustomDataSource</code> with minimal changes:
 
 * Add your JDBC driver in your classpath
