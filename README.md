@@ -41,9 +41,10 @@ This example will work with any 12.x OPL version, even if it is configured to ru
    MySQL Comunity Server, but is compatible with minimal changes with other JDBC
    compatible databases.
 
-## Build and run the sample from java
+## Build and run the sample
 
-The default sample uses model and data from [examples/oil](examples/oil)
+The default sample uses model and data from [examples/oil](examples/oil).
+Before you run, you need to populate the database. See details in subsections:
 
 - [Run sample with DB2](README.DB2.md)
 - [Run sample with MySQL](README.MySQL.md)

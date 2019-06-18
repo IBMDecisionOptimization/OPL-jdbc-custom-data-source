@@ -5,28 +5,17 @@ create database. This version offers the most flexibility for outputs to databas
 
 # Setup
 
-Before you run the sample, you will need to edit [oil.dat](oil.dat), and configure
+Before you run the sample, please make sure you created an example database.
+See the *Setup the sample database* section for [DB2](../../README.DB2.md),
+[MySQL](../../README.MySQL.md), [Microsoft SQL Server](../../README.SQLServer.md).
+
+Then, you will need to edit [oil.dat](oil.dat), and configure
 paths. In particular, you want to add the JDBC connector jar, for instance:
 
 ```
   // Update this to point to your jdbc driver.
   // For instance mssql-jdbc-7.2.2.jre8.jar for mssql
   IloOplImportJava("../../external_libs/mssql-jdbc-7.2.2.jre8.jar")
-```
-
-And you want to specify the configuration file for your database connection:
-
-```
-  // This is the configuration file for accessing your database.
-  var jdbcConfigXml = "../../data/db_mssql.xml";
-```
-
-Lastly, you want to point to the jdbc custom data source jar.
-It is distributed as binaries in the [lib](../../lib) directory:
-
-```
-  // The jar containing the jdbc custom data source
-  IloOplImportJava("../../lib/jdbc-custom-data-source.jar");
 ```
 
 # Customize table creation
@@ -53,7 +42,7 @@ To run the sample, invoke the `run.bat` script:
 ```
 [P36] D:\>
 run.bat
-Buildfile: D:\opl\OPL-jdbc-custom-data-source\examples\ilo_opl_call_java\build.xml
+Buildfile: D:\opl\OPL-jdbc-custom-data-source\examples\advanced_queries\build.xml
 
 platform:
 
