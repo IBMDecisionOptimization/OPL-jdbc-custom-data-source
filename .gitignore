@@ -7,7 +7,8 @@ build/
 external_libs/
 /target/
 
-# eclipse files
-.classpath
-.project
-.settings/
+# I don't want the eclipse file for the root project to be in the repository,
+# but some examples might have eclipse projects in them
+/.classpath
+/.project
+/.settings/
