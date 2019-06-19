@@ -20,7 +20,7 @@ prepare {
 	db.execute("DROP TABLE result");
   	db.execute("CREATE TABLE result(oil VARCHAR(30), gas VARCHAR(30), blend FLOAT, a FLOAT)");
   	
-    // Formerly: items to DBUpdate(db, )
+    // write results to database
   	db.update("items", "INSERT INTO result(oil, gas, blend, a) VALUES (?,?,?,?)");
 }
 

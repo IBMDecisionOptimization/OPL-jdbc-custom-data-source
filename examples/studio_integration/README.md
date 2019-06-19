@@ -29,7 +29,7 @@ if (! libs ) {
 
 ## Data definition
 
-The data input definition relies on support functions defined in `jdbc.js`.
+The data input definition relies on support functions defined in [jdbc.js](jdbc.js).
 
 You include that script using:
 
@@ -53,7 +53,7 @@ Then use the defined functions to create a connector and define inputs:
 	db.execute("DROP TABLE result");
 	db.execute("CREATE TABLE result(oil VARCHAR(30), gas VARCHAR(30), blend FLOAT, a FLOAT)");
 	
-	// Formerly: items to DBUpdate(db, )
+	// write results to database
 	db.update("items", "INSERT INTO result(oil, gas, blend, a) VALUES (?,?,?,?)");
 ```
 
