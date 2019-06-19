@@ -15,9 +15,9 @@ This example will work with any 12.x OPL version, even if it is configured to ru
 
 ## Table of Contents
    - [Prerequisites](#prerequisites)
-   - [Build and run the sample from java](#build-and-run-the-sample-from-java)
+   - [Build and run the sample](#build-and-run-the-sample)
+      - [Run the 'oil' sample](#run-the-oil-sample)
       - [Run the sample from OPL](#run-the-sample-from-opl)
-      - [Reusing the sample with other databases](#reusing-the-sample-with-other-databases)
    - [Export plain dat files](#export-plain-dat-files)
    - [Run with another OPL version](#run-with-another-opl-version)
    - [License](#license)   
@@ -43,76 +43,25 @@ This example will work with any 12.x OPL version, even if it is configured to ru
 
 ## Build and run the sample
 
-The default sample uses model and data from [examples/oil](examples/oil).
 Before you run, you need to populate the database. See details in subsections:
 
 - [Run sample with DB2](README.DB2.md)
 - [Run sample with MySQL](README.MySQL.md)
 - [Run sample with MS SQL Server](README.SQLServer.md)
 
+### Run the 'oil' sample
+
+The [examples/oil](examples/oil) sample demonstrates how to create a Java application with
+a custom data source and invoke OPL from Java.
 
 ### Run the sample from OPL
 
-Sample in [examples/ilo_opl_call_java](examples/ilo_opl_call_java) shows how to
+The [examples/studio_integration](examples/studio_integration) sample shows how to
 use the jdbc custom data source as a library, without having the need to
 invoke OPL runtime from java. You can use this method to access database
 using a jdbc-custom-data-source from `oplrun` or OPL Studio.
 
 
-### Reusing the sample with other databases
-
-As the sample is build on JDBC, it's possible to reuse <code>JdbcCustomDataSource</code> with minimal changes:
-
-* Add your JDBC driver in your classpath
-* update db.xml with your database connection string
-
-	```	XML
-	<!-- The connection string
-		 The default url connects to mysql on default port, using database
-		'custom_data_source'
-	 -->
-	<url>jdbc:mysql://localhost:3306/custom_data_source?useSSL=false</url>
-	
-	<!-- Your connection credentials -->
-	<user>sql_user</user>
-	<password>mysql</password>
-	```
-
-* update db.xml with queries to read your data elements.
-
-	```XML
-	<read>
-		<query name="Gasolines">SELECT NAME FROM GasData</query>
-		<query name="Oils">SELECT NAME FROM OilData</query>
-		<query name="GasData">SELECT * FROM GasData</query>
-		<query name="OilData">SELECT * FROM OilData</query>
-	</read>
-	```
-	
-* update db.xml with your output data elements mapping to tables.
-
-	```XML
-	<write>
-		<!-- This maps the output dataset "Result" to the "result" table -->
-		<table name="Result" target="result"/>
-	</write>
-	```
-* Initialize a new <code>JdbcCustomDataSource</code>, read your database
-  configuration file and add your data source to OPL using
-  <code>IloOplModel.addDataSource()</code>.
-  
-	```Java
-	JdbcConfiguration jdbcProperties = null;
-	String jdbcConfigurationFile = cl.getPropertiesFileName();
-	if (jdbcConfigurationFile != null) {
-	    jdbcProperties = new JdbcConfiguration();
-	    jdbcProperties.read(jdbcConfigurationFile);
-	    // Create the custom JDBC data source
-	    IloOplDataSource jdbcDataSource = new JdbcCustomDataSource(jdbcProperties, oplF, def);
-	    // Pass it to the model.
-	    opl.addDataSource(jdbcDataSource);
-	}
-	```
 
 ## Export plain dat files
 * When running the `ant` command with the DB2/mysql target, simply add `-Dexport=result.dat` on the command line, and it will export all the tuplesets that have been extracted from the database to `result.dat` file.

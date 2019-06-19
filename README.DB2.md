@@ -2,8 +2,7 @@
 
 ## Build the sample
 
-Samples [advanced_queries](examples/advanced_queries), [embedded_in_dat](examples/embedded_in_dat) and
-[studio_integration](examples/studio_integration) do not need to be compiled, so you can skip this
+Sample [studio_integration](examples/studio_integration) do not need to be compiled, so you can skip this
 section.
 
 Before you build the [oil](examples/oil) sample, you must edit `build.properties` for the appropriate path locations:
@@ -51,13 +50,6 @@ to your DB2 jdbc driver.
 
 Depending on the sample you run, you need to edit `build.properties` to make
 `db2.jdbc.connector.path` point to your DB2 jdbc driver (i.e. db2jcc4.jar).
-
-On samples like [advanced_queries](examples/advanced_queries), [embedded_in_dat](examples/embedded_in_dat),
-you will need to edit your `.dat` so that the following line points to where your jdbc driver resides:
-
-```
-	IloOplImportJava("../../external_libs/db2jcc4.jar")
-```
 
 In sample [studio_integration](examples/studio_integration), you will need to edit `jdbc.js` to point
 to your jdbc driver, *or* add an `OPL_JDBC_DRIVER` environment variable pointing to it:
