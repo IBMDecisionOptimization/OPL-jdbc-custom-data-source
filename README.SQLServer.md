@@ -32,7 +32,7 @@ SQL Server instance name is SQLEXPRESS, create database using:
 C:\>sqlcmd -S .\SQLEXPRESS -i data\oil_mssql.sql
 ```
 
-Before you run the sample, you need to download the [Microsoft JDBC Driver for SQL Server](https://docs.microsoft.com/fr-fr/sql/connect/jdbc/download-microsoft-jdbc-driver-for-sql-server?view=sql-server-2017).
+Before you run the sample, you need to download the [Microsoft JDBC Driver for SQL Server](https://docs.microsoft.com/en-us/sql/connect/jdbc/download-microsoft-jdbc-driver-for-sql-server?view=sql-server-2017).
 
 Once your download finished, decompress the archive. The archive contains jar files that
 look like `mssql-jdbc-7.2.2.jre8.jar`. 
