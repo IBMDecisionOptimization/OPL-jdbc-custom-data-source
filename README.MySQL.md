@@ -2,10 +2,12 @@
 
 ## Build the sample
 
-Before you build the sample, you must edit `build.properties` for the appropriate path locations:
+Sample [studio_integration](examples/studio_integration) do not need to be compiled, so you can skip this
+section.
+
+Before you build the [oil](examples/oil) sample, you must edit `build.properties` for the appropriate path locations:
 
 * If you want to run the sample with MySQL, `mysql.jdbc.connector.path` should point to your JDBC driver location.
-* If you want to run the sample with IBM DB2, `db2.jdbc.connector.path` should point to your JDBC driver location.
 * `opl.home` should point to your OPL home, unless you have a `CPLEX_STUDIO_DIR128` set. (this variable should exists if you installed on a Windows machine).
 
 The build file, `build.xml`, imports the build file from the OPL samples,
@@ -57,7 +59,23 @@ Once the driver is download and extracted, edit property `jdbc.connector.path` i
 to include the MySQL Connector/J `.jar` (should look like `mysql-connector-java-5.1.40-bin.jar`
 in your MySQL Connector/J extracted diretory)
 
-Edit `data\db_mysql.xml` for your JDBC connection string and credentials.
+
+Depending on the sample you run, you need to edit `build.properties` to make
+`mysql.jdbc.connector.path` point to your MySQL jdbc driver (i.e. mysql-connector-java-5.1.40-bin.jar).
+
+
+In sample [studio_integration](examples/studio_integration), you will need to edit `jdbc.js` to point
+to your jdbc driver, *or* add an `OPL_JDBC_DRIVER` environment variable pointing to it:
+
+```
+	var jdbc_driver = IloOplGetEnv("OPL_JDBC_DRIVER");
+	if (! jdbc_driver ) {
+		jdbc_driver = "../../external_libs/mysql-connector-java-5.1.40-bin.jar";  // default for this project
+	}
+```
+
+
+For sample [oil](examples/oil), edit `data\db_mysql.xml` for your JDBC connection string and credentials.
 Your connection string looks like `jdbc:mysql://localhost:3306/<database_name>?useSSL=false`
 where `<database_name>` is the name of your database (default is `custom_data_source`).
 
