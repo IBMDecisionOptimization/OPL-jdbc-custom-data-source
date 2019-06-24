@@ -64,11 +64,18 @@ using a jdbc-custom-data-source from `oplrun` or OPL Studio.
 
 
 ## Export plain dat files
+
 * When running the `ant` command with the DB2/mysql target, simply add `-Dexport=result.dat` on the command line, and it will export all the tuplesets that have been extracted from the database to `result.dat` file.
 
 ## Run with another OPL version
+
 * Edit the build.xml at the root of the directory, and adapt the `example.home` variable to point to your 12.x version.
 * Recompile the project
+
+## Limitations
+
+* The custom data source reader supports scalar values, tuples and tuplessets. Arrays are not supported.
+* Inner tuples are not supported.
 
 ## License
 
