@@ -50,7 +50,8 @@
     </target>
 	
 	<target name="jar" depends="compile">
-		<jar destfile="lib/jdbc-custom-data-source.jar" basedir="${build}"/>
+		<jar destfile="lib/jdbc-custom-data-source.jar" basedir="${build}"
+			manifest="src/main/resources/META-INF/MANIFEST.MF"/>
 	</target>
     
 	<target name="run" depends="compile">

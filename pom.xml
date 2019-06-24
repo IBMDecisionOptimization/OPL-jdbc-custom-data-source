@@ -59,6 +59,12 @@
 					<excludes>
 						<exclude>**/log4j.properties</exclude>
 					</excludes>
+					<archive>
+						<manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+						<manifestEntries>
+							<Specification-Version>${version}</Specification-Version>
+						</manifestEntries>
+					</archive>
 				</configuration>
 			</plugin>
 		</plugins>
