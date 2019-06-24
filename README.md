@@ -74,7 +74,7 @@ using a jdbc-custom-data-source from `oplrun` or OPL Studio.
 
 ## Limitations
 
-* The custom data source reader supports scalar values, tuples and tuplessets. Arrays are not supported.
+* The custom data source reader supports scalar values, sets and tuplessets. Arrays are not supported.
 * Inner tuples are not supported.
 
 ## License

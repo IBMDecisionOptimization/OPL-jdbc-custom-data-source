@@ -16,11 +16,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Enumeration;
 import java.util.Map;
-import java.util.Properties;
 
 import com.ibm.opl.customdatasource.JdbcConfiguration.OutputParameters;
+import com.ibm.opl.customdatasource.sql.NamedParametersPreparedStatement;
 
 /**
  * The class to write data using JDBC.
@@ -111,20 +110,83 @@ public class JdbcWriter {
       query += ") VALUES(" + getPlaceholderString(schema.getSize()) + ")";
       return query;
     }
-    
-  void updateValues(IloTuple tuple, IloTupleSchema schema,
-      IloOplTupleSchemaDefinition tupleSchemaDef, PreparedStatement stmt) throws SQLException {
-    for (int i = 0; i < schema.getSize(); i++) {
-      int index = i + 1; // index in PreparedStatement
-      Type columnType = tupleSchemaDef.getComponent(i).getElementDefinitionType();
-      if (columnType == Type.INTEGER)
-        stmt.setInt(index, tuple.getIntValue(i));
-      else if (columnType == Type.FLOAT)
-        stmt.setDouble(index, tuple.getNumValue(i));
-      else if (columnType == Type.STRING)
-        stmt.setString(index, tuple.getStringValue(i));
+
+  /**
+   * ValuesUpdater update the values in a PreparedStatement with the contents of the specified IloTuple.
+   *
+   */
+  public static interface ValuesUpdater {
+    /**
+     * Update the parameters in a PreparedStatement with the values of the specified tuple.
+     * @param tuple
+     * @throws SQLException
+     */
+    void updateValues(IloTuple tuple) throws SQLException;
+  }
+
+  /**
+   * A ValuesUpdater updating values by name.
+   *
+   */
+  public static class NamedValuesUpdater implements ValuesUpdater {
+    String[] _names = null;
+    Type[] _types = null;
+    NamedParametersPreparedStatement _stmt;
+    NamedValuesUpdater(IloTupleSchema schema, IloOplTupleSchemaDefinition tupleSchemaDef,
+        NamedParametersPreparedStatement stmt) {
+      _names = new String[schema.getSize()];
+      _types = new Type[schema.getSize()];
+      for (int i=0; i < schema.getSize(); i++) {
+        _names[i] = tupleSchemaDef.getComponent(i).getName();
+        _types[i] = tupleSchemaDef.getComponent(i).getElementDefinitionType();
+      }
+      _stmt = stmt;
+    }
+    public void updateValues(IloTuple tuple) throws SQLException {
+      final NamedParametersPreparedStatement stmt = _stmt;
+      for (int i=0; i < _names.length; i++) {
+        final Type columnType = _types[i];
+        final String name = _names[i];
+        if (columnType == Type.INTEGER)
+          stmt.setInt(name, tuple.getIntValue(i));
+        else if (columnType == Type.FLOAT)
+          stmt.setDouble(name, tuple.getNumValue(i));
+        else if (columnType == Type.STRING)
+          stmt.setString(name, tuple.getStringValue(i));
+      }
     }
   }
+  
+  /**
+   * A ValuesUpdater updating values by index.
+   *
+   */
+  public static class IndexedValuesUpdater implements ValuesUpdater{
+    Type[] _types = null;
+    PreparedStatement _stmt;
+    IndexedValuesUpdater(IloTupleSchema schema, IloOplTupleSchemaDefinition tupleSchemaDef,
+        PreparedStatement stmt) {
+      _types = new Type[schema.getSize()];
+      for (int i=0; i < schema.getSize(); i++) {
+        _types[i] = tupleSchemaDef.getComponent(i).getElementDefinitionType();
+      }
+      _stmt = stmt;
+    }
+    public void updateValues(IloTuple tuple) throws SQLException {
+      PreparedStatement stmt = _stmt;
+      for (int i=0; i < _types.length; i++) {
+        int columnIndex = i + 1;
+        Type columnType = _types[i];
+        if (columnType == Type.INTEGER)
+          stmt.setInt(columnIndex, tuple.getIntValue(i));
+        else if (columnType == Type.FLOAT)
+          stmt.setDouble(columnIndex, tuple.getNumValue(i));
+        else if (columnType == Type.STRING)
+          stmt.setString(columnIndex, tuple.getStringValue(i));
+      }
+    }
+  }
+  
 
     static final String DROP_QUERY = "DROP TABLE %";
 
@@ -139,10 +201,8 @@ public class JdbcWriter {
         IloOplElement elt = _model.getElement(name);
         ilog.opl_core.cppimpl.IloTupleSet tupleSet = (ilog.opl_core.cppimpl.IloTupleSet) elt.asTupleSet();
         IloTupleSchema schema = tupleSet.getSchema_cpp();
-        Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(_configuration.getUrl(), _configuration.getUser(),
-                    _configuration.getPassword());
+        try (Connection conn = DriverManager.getConnection(_configuration.getUrl(), _configuration.getUser(),
+                    _configuration.getPassword())) {
             try (Statement stmt = conn.createStatement()) {
               String sql;
               // drop existing table if exists
@@ -172,7 +232,7 @@ public class JdbcWriter {
                 stmt.execute(sql);
               }
             } 
-            PreparedStatement insert = null;
+            NamedParametersPreparedStatement np_stmt = null;
             try {
               IloOplElementDefinition tupleDef = _def.getElementDefinition(schema.getName());
               IloOplTupleSchemaDefinition tupleSchemaDef = tupleDef.asTupleSchema();
@@ -186,46 +246,50 @@ public class JdbcWriter {
               } else {
                 psql = op.insertStatement;
               }
-              insert = conn.prepareStatement(psql);
-              
+              np_stmt = new NamedParametersPreparedStatement(conn, psql);
               conn.setAutoCommit(false); // begin transaction
-              // iterate the set and create the final insert statement
+
+              // The helper to updater a statement given a tuple
+              ValuesUpdater updater = null;
+              if (np_stmt.hasNamedParameters()) {
+                updater = new NamedValuesUpdater(schema, tupleSchemaDef, np_stmt);
+              } else {
+                // the named parameters prepared statement did not parse any named parameters
+                // assume this is then regular prepared statement, and use the statement instead.
+                updater = new IndexedValuesUpdater(schema, tupleSchemaDef, np_stmt.getStatement());
+              }
+              
+              // the insert loop
               long icount = 1;
               for (java.util.Iterator it1 = tupleSet.iterator(); it1.hasNext();) {
                   IloTuple tuple = (IloTuple) it1.next();
-                  updateValues(tuple, schema, tupleSchemaDef, insert);
+                  updater.updateValues(tuple);
                   if (_batch_size == 0) {
-                    // no batch
-                    insert.executeUpdate();
+                    np_stmt.executeUpdate(); // no batch
                   }
                   else {
-                    insert.addBatch();
+                    np_stmt.addBatch();
                     if ((icount % _batch_size) == 0) {
-                      insert.executeBatch();
+                      np_stmt.executeBatch();
                     }
                   }
                   icount ++;
               }
+
+              // flush batches if any
               if (_batch_size != 0) {
-                insert.executeBatch();
+                np_stmt.executeBatch();
               }
               conn.commit();
             } catch (SQLException e) {
               conn.rollback();
               throw e;
             } finally {
-              if (insert != null)
-                insert.close();
+              if (np_stmt != null)
+                np_stmt.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-          if (conn != null)
-            try {
-              conn.close();
-            } catch (SQLException e) {
-              e.printStackTrace();
-            }
         }
     }
 }
