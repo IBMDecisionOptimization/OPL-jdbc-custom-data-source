@@ -1,0 +1,3 @@
+Specification-Title: JDBC custom data source for OPL
+Specification-Version: 1.0
+Specification-Vendor: IBM
