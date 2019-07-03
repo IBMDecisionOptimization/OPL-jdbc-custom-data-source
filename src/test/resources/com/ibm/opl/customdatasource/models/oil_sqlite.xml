@@ -13,7 +13,7 @@
 		 The name attribute is used to populate the corresponding Data Element.
 	-->
 	<read>
-		<query name="Gasolines">SELECT NAME FROM GASDATA</query>
+		<query name="Gasolines">SELECT NOM FROM GASDATA</query>
 		<query name="Oils">SELECT NAME FROM OILDATA</query>
 		<query name="GasData">SELECT * FROM GASDATA</query>
 		<query name="OilData">SELECT * FROM OILDATA</query>
