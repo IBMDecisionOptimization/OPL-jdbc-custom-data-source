@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.junit.Assert.*;
@@ -25,6 +26,9 @@ public class JavaApiTest {
   public static String OIL_DAT="models/oil.dat";
   public static String OIL_MOD="models/oil.mod";
   public static String CONFIG_RESOURCE = "models/oil_sqlite.xml";
+  public static String CONFIG_RESOURCE_NAME_MAPPING_OK = "models/oil_sqlite_name_mapping_ok_select.xml";
+  public static String CONFIG_RESOURCE_NAME_MAPPING_WRONG = "models/oil_sqlite_name_mapping_wrong_select.xml";
+  public static String CONFIG_RESOURCE_NO_NAME_MAPPING = "models/oil_sqlite_no_name_mapping.xml";
   
   public static String CREATE_OIL_MOD="models/oil_create_db.mod";
   public static String CREATE_CONFIG_RESOURCE = "models/oil_create_db.xml";
@@ -121,16 +125,40 @@ public class JavaApiTest {
       }
       
       // use a .mod to create tmp database
+      // The tmp database is created with wrong column names
+      // (name, demand, price) are replaced by (nom, demande, prix)
       String createModFilename = new File(getClass().getResource(CREATE_OIL_MOD).getFile()).getAbsolutePath();
       String createJdbcConfigurationFile = new File(getClass().getResource(CREATE_CONFIG_RESOURCE).getFile()).getAbsolutePath();
       runMod(createModFilename, null, createJdbcConfigurationFile, connectionString);
       
-      // now solve the oil model
-      String modFilename = new File(getClass().getResource(OIL_MOD).getFile()).getAbsolutePath();
-      String[] datFilenames = {new File(getClass().getResource(OIL_DAT).getFile()).getAbsolutePath()};
-      String jdbcConfigurationFile = new File(getClass().getResource(CONFIG_RESOURCE).getFile()).getAbsolutePath();
-      runMod(modFilename, datFilenames, jdbcConfigurationFile, connectionString);
-
+      // now solve the oil model => we want an error here
+      // in that particular test,that should be a runtime exception
+      try {
+        String modFilename = new File(getClass().getResource(OIL_MOD).getFile()).getAbsolutePath();
+        String[] datFilenames = {new File(getClass().getResource(OIL_DAT).getFile()).getAbsolutePath()};
+        String jdbcConfigurationFile = new File(getClass().getResource(CONFIG_RESOURCE_NAME_MAPPING_WRONG).getFile()).getAbsolutePath();
+        runMod(modFilename, datFilenames, jdbcConfigurationFile, connectionString);
+        fail("We should have encountered a SQLException: no such column");
+      } catch (RuntimeException re) {
+        Throwable cause = re.getCause();
+        assertTrue(cause instanceof SQLException);
+        assertTrue(cause.getMessage().contains("no such column"));
+      }
+      
+      // resolve, using the right name mapping
+      {
+        String modFilename = new File(getClass().getResource(OIL_MOD).getFile()).getAbsolutePath();
+        String[] datFilenames = {new File(getClass().getResource(OIL_DAT).getFile()).getAbsolutePath()};
+        String jdbcConfigurationFile = new File(getClass().getResource(CONFIG_RESOURCE_NAME_MAPPING_OK).getFile()).getAbsolutePath();
+        runMod(modFilename, datFilenames, jdbcConfigurationFile, connectionString);
+      }
+      // resolve, without name mapping
+      {
+        String modFilename = new File(getClass().getResource(OIL_MOD).getFile()).getAbsolutePath();
+        String[] datFilenames = {new File(getClass().getResource(OIL_DAT).getFile()).getAbsolutePath()};
+        String jdbcConfigurationFile = new File(getClass().getResource(CONFIG_RESOURCE_NO_NAME_MAPPING).getFile()).getAbsolutePath();
+        runMod(modFilename, datFilenames, jdbcConfigurationFile, connectionString);
+      }
     } catch (IloOplException ex) {
       ex.printStackTrace();
       fail("### OPL exception: " + ex.getMessage());

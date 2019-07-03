@@ -11,9 +11,9 @@
 
 
 tuple gasType {
-   string name;
-   float demand;
-   float price;
+   string nom;
+   float demande;
+   float prix;
    float octane;
    float lead;
 }

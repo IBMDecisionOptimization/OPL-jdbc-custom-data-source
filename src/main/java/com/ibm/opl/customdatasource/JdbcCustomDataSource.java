@@ -349,6 +349,8 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
         Type[] oplFieldsType = new Type[size];
 
         fillNamesAndTypes(schema, oplFieldsName, oplFieldsType);
+        
+        boolean is_mapping_name = _configuration.isMappingName();
 
         final RunQuery q = new RunQuery(query);
         try {
@@ -359,13 +361,24 @@ public class JdbcCustomDataSource extends IloCustomOplDataSource {
             while (rs.next()) {
                 handler.startTuple();
                 for (int column = 0; column < oplFieldsName.length; column++) {
-                    String columnName = oplFieldsName[column];
-                    if (oplFieldsType[column] == Type.INTEGER) {
-                        handler.addIntItem(rs.getInt(columnName));
-                    } else if (oplFieldsType[column] == Type.FLOAT) {
-                        handler.addNumItem(rs.getDouble(columnName));
-                    } else if (oplFieldsType[column] == Type.STRING) {
-                        handler.addStringItem(rs.getString(columnName));
+                    if (is_mapping_name) {
+                      String columnName = oplFieldsName[column];
+                      if (oplFieldsType[column] == Type.INTEGER) {
+                          handler.addIntItem(rs.getInt(columnName));
+                      } else if (oplFieldsType[column] == Type.FLOAT) {
+                          handler.addNumItem(rs.getDouble(columnName));
+                      } else if (oplFieldsType[column] == Type.STRING) {
+                          handler.addStringItem(rs.getString(columnName));
+                      }
+                    } else {
+                      int sql_index = column+1;
+                      if (oplFieldsType[column] == Type.INTEGER) {
+                        handler.addIntItem(rs.getInt(sql_index));
+                      } else if (oplFieldsType[column] == Type.FLOAT) {
+                        handler.addNumItem(rs.getDouble(sql_index));
+                      } else if (oplFieldsType[column] == Type.STRING) {
+                        handler.addStringItem(rs.getString(sql_index));
+                      }
                     }
                 }
                 handler.endTuple();
