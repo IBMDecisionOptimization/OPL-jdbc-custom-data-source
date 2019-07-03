@@ -42,7 +42,8 @@ public class JdbcConfiguration {
     private final static String URL = "url";
     private final static String USER = "user";
     private final static String PASSWORD = "password";
-
+    private final static String IS_MAPPING_NAME = "is_mapping_name";
+    
     private final static String READ = "read";
     private final static String WRITE = "write";
 
@@ -54,6 +55,7 @@ public class JdbcConfiguration {
     private String _url = null;
     private String _user = null;
     private String _password = null;
+    private boolean _is_mapping_name = false;
 
     /** Resolve <code>s</code> using environment variables.
      * If <code>s</code> starts with "$" and is the name of an existing
@@ -76,6 +78,14 @@ public class JdbcConfiguration {
      * Creates a new JDBC configuration.
      */
     public JdbcConfiguration() {
+    }
+    
+    public boolean isMappingName() {
+      return _is_mapping_name;
+    }
+    public void setMappingName(boolean value)
+    {
+      _is_mapping_name = value;
     }
     
     public String getUrl() {
@@ -205,6 +215,11 @@ public class JdbcConfiguration {
         this._url = properties.getProperty(URL);
         this._user = properties.getProperty(USER);
         this._password = properties.getProperty(PASSWORD);
+        String v = properties.getProperty(IS_MAPPING_NAME);
+        if (v != null) {
+          this._is_mapping_name = Boolean.valueOf(v);
+        }
+        
         
         // iterate properties to find read and write
         Enumeration<?> propertyNames = properties.propertyNames();
@@ -276,6 +291,12 @@ public class JdbcConfiguration {
             _url = doc.getElementsByTagName(URL).item(0).getTextContent();
             _user = doc.getElementsByTagName(USER).item(0).getTextContent();
             _password = doc.getElementsByTagName(PASSWORD).item(0).getTextContent();
+            
+            NodeList nl = doc.getElementsByTagName(IS_MAPPING_NAME);
+            if (nl.getLength() > 0) {
+              String v = nl.item(0).getTextContent();
+              _is_mapping_name = Boolean.valueOf(v);
+            }
             
             // input parameters
             Node readNode = doc.getElementsByTagName(READ).item(0);
