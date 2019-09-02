@@ -3,7 +3,7 @@
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
   <!--  This is the assembly descriptor for the whole docplex project (mp+cp) -->
   
-  <id>opl_jdbc</id>
+  <id>binaries</id>
   <baseDirectory>/</baseDirectory>
   <formats>
     <format>zip</format>
