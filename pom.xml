@@ -7,7 +7,7 @@
 
 	<groupId>com.ibm.optim.opl</groupId>
 	<artifactId>jdbc-custom-data-source</artifactId>
-	<version>1.2-master</version>
+	<version>1.2</version>
 	<packaging>jar</packaging>
 
 	<properties>
