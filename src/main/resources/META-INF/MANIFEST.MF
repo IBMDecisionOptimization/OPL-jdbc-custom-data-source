@@ -1,3 +1,2 @@
 Specification-Title: JDBC custom data source for OPL
-Specification-Version: 1.1
 Specification-Vendor: IBM

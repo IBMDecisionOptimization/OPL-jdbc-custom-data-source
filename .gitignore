@@ -12,3 +12,6 @@ external_libs/
 /.classpath
 /.project
 /.settings/
+
+# ignore jars in examples
+examples/**/*.jar

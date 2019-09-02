@@ -7,19 +7,19 @@
 
 	<groupId>com.ibm.optim.opl</groupId>
 	<artifactId>jdbc-custom-data-source</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.2-master</version>
 	<packaging>jar</packaging>
 
 	<properties>
 		<jdk.version>1.7</jdk.version>
-		<cplex_home>${env.CPLEX_STUDIO_DIR128}</cplex_home>
-		<cplex_version>12.8.0.0</cplex_version>
+		<cplex_home>${env.CPLEX_STUDIO_DIR129}</cplex_home>
+		<cplex_version>12.9.0.0</cplex_version>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<!-- To install oplall.jar on your machine, do something like:
-			mvn install:install-file "-Dfile=%CPLEX_STUDIO_DIR128%\opl\lib\oplall.jar" -DgroupId=com.ibm.ilog.optim -DartifactId=oplall -Dversion=12.8.0.0 -Dpackaging=jar
+			mvn install:install-file "-Dfile=%CPLEX_STUDIO_DIR129%\opl\lib\oplall.jar" -DgroupId=com.ibm.ilog.optim -DartifactId=oplall -Dversion=12.9.0.0 -Dpackaging=jar
 			-->
 			<groupId>com.ibm.ilog.optim</groupId>
 			<artifactId>oplall</artifactId>
@@ -62,11 +62,30 @@
 					<archive>
 						<manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
 						<manifestEntries>
-							<Specification-Version>${version}</Specification-Version>
+							<Specification-Version>${project.version}</Specification-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
 			</plugin>
+			
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>true</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>src/main/assembly/distrib.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 </project>

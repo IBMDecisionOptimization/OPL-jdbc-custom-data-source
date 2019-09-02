@@ -8,31 +8,37 @@
 // Before running this sample, please review and setup the following
 //
 
-// OPL_JDBC_DRIVER points to the jar for the jdbc driver you want to use.
-var jdbc_driver = IloOplGetEnv("OPL_JDBC_DRIVER");
-if (! jdbc_driver ) {
-	jdbc_driver = "../../external_libs/mssql-jdbc-7.2.2.jre8.jar";  // default for this project
-}
+// EDIT: you want to change this for your actual driver
+var jdbc_driver = "mssql-jdbc-7.4.1.jre8.jar"
+// EDIT: specify where to look for the jdbc driver. Default is in . (besides this .js script) and in ../../external_libs
+var jdbc_driver_path = ".;../../external_libs"
 
-// OPL_JDBC_LIBS points to the directory containing the library needed for this sample.
-// You want to put jdbc-custom-data-source.jar there.
-var libs = IloOplGetEnv("OPL_JDBC_LIBS");
-if (! libs ) {
-	libs = "../../lib";  // default value use the lib at the root of this project
-}
 
+// EDIT: specfify where jdbc-custom-data-source is of the github project.
+// default is to look in . and ../../lib
+var libs = ".;../../lib";
 
 //
 // From this point, nothing is to be edited.
 //
 
-// Update this to point to your jdbc driver.
-IloOplImportJava(jdbc_driver)
+// import all drivers in jdbc_driver, separated by ;. This allows to be stored at different default locations.
+var drivers = jdbc_driver_path.split(";");
+for (var i=0; i < drivers.length; i++) {
+	IloOplImportJava(drivers[i] + "/" + jdbc_driver)
+}
 
-
+// load the driver specified by environment variable if this exists.
+var jdbc_driver_env = IloOplGetEnv("OPL_JDBC_DRIVER");
+if ( jdbc_driver_env ) {
+	IloOplImportJava(jdbc_driver_env);
+}
 
 // The jar containing the jdbc custom data source
-IloOplImportJava(libs +  "/jdbc-custom-data-source.jar");
+var lib_locations = libs.split(";");
+for (var i=0; i < lib_locations.length; i++) {
+	IloOplImportJava(lib_locations[i] +  "/jdbc-custom-data-source.jar");
+}
 
 function JDBCConnector(url) {
 	// Now create JdbcConfiguration
